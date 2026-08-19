@@ -1,0 +1,13 @@
+# Normalise line endings: LF in the repository, native in the working tree.
+* text=auto eol=lf
+
+# Binary / never-diff
+*.xlsx binary
+*.xls  binary
+*.xlsm binary
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+
+# Markdown docs diff by paragraph
+*.md diff=markdown

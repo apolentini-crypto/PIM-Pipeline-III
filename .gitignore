@@ -1,0 +1,51 @@
+# --- Secrets: NFR-003 says secrets are supplied at run time, never stored here ---
+.env
+.env.*
+*.secrets.json
+.*-secrets.json
+secrets/
+credentials.json
+
+# --- Vendor source spreadsheets (read-only inputs, not repo content) ---
+/sources/
+*.xlsx
+*.xls
+*.xlsm
+~$*
+
+# --- Build / run outputs: built data, ledgers, snapshots, before-images ---
+/build/
+/out/
+/runs/
+/snapshots/
+/backups/
+/logs/
+*.log
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Stale git lock artifacts (see repo setup 2026-08-18) ---
+index.lock
+*.stale
+_to_delete/
