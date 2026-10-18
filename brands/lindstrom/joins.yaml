@@ -1,0 +1,4 @@
+primary_source: S2            # Category Assignments: 322 rows, every one categorised (contract §5 #2)
+key: { rule: trim-only }      # never alter a key's interior: 'TL 15A-GW' ≠ 'TL 15AGW' (FR-15..17)
+associations:
+  - { from_source: S7, from_key: "15AGWM", to_source: S2, to_key: "TL 15A-GW", basis: "gen-1 FR-16 rationale: price-book code vs site code; 2026-08-17 rulings" }

@@ -1,0 +1,55 @@
+{
+  "$comment": "Generated from pim.config.models.Thresholds; do not edit by hand.",
+  "$defs": {
+    "Threshold": {
+      "additionalProperties": false,
+      "properties": {
+        "max_direction_fraction": {
+          "default": 0.8,
+          "description": "OQ-6 default: >80% of changes same direction = directional anomaly",
+          "maximum": 1,
+          "minimum": 0.5,
+          "title": "Max Direction Fraction",
+          "type": "number"
+        },
+        "max_rows_absolute": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Rows Absolute"
+        },
+        "max_rows_fraction": {
+          "default": 0.25,
+          "description": "OQ-6 default: >25% of rows changing needs typed confirmation",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Max Rows Fraction",
+          "type": "number"
+        }
+      },
+      "title": "Threshold",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "default": {
+      "$ref": "#/$defs/Threshold"
+    },
+    "per_field": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Threshold"
+      },
+      "title": "Per Field",
+      "type": "object"
+    }
+  },
+  "title": "Thresholds",
+  "type": "object"
+}

@@ -1,0 +1,158 @@
+{
+  "$comment": "Generated from pim.config.models.Fields; do not edit by hand.",
+  "$defs": {
+    "ColumnRef": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "description": "exact header text, byte-for-byte (FR-111)",
+          "title": "Column",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "column"
+      ],
+      "title": "ColumnRef",
+      "type": "object"
+    },
+    "FieldDecl": {
+      "additionalProperties": false,
+      "properties": {
+        "alias_tolerance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FR-20: numeric tolerance like '2%' or '0.5'; absent = exact",
+          "title": "Alias Tolerance"
+        },
+        "aliases": {
+          "description": "FR-18: fire only when primary is empty",
+          "items": {
+            "$ref": "#/$defs/ColumnRef"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "confirmed": {
+          "default": "",
+          "description": "FR-105: 'Y' publishes the field; blank leaves it out",
+          "enum": [
+            "Y",
+            ""
+          ],
+          "title": "Confirmed",
+          "type": "string"
+        },
+        "primary": {
+          "$ref": "#/$defs/ColumnRef"
+        },
+        "required": {
+          "default": false,
+          "description": "INV-17: absence is a build failure, not an empty value",
+          "title": "Required",
+          "type": "boolean"
+        },
+        "type": {
+          "default": "text",
+          "enum": [
+            "text",
+            "number",
+            "integer",
+            "bool",
+            "html",
+            "url"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnitSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "primary"
+      ],
+      "title": "FieldDecl",
+      "type": "object"
+    },
+    "UnitSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "decimal_comma": {
+          "default": false,
+          "title": "Decimal Comma",
+          "type": "boolean"
+        },
+        "expect": {
+          "description": "unit tokens accepted, e.g. [mm, in]",
+          "items": {
+            "type": "string"
+          },
+          "title": "Expect",
+          "type": "array"
+        },
+        "parse": {
+          "default": "declared",
+          "enum": [
+            "in-value",
+            "declared"
+          ],
+          "title": "Parse",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "for parse=declared: the unit the column carries",
+          "title": "Unit"
+        }
+      },
+      "title": "UnitSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fields": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FieldDecl"
+      },
+      "description": "canonical field name \u2192 declaration; the set is OPEN (D-6)",
+      "minProperties": 1,
+      "title": "Fields",
+      "type": "object"
+    }
+  },
+  "required": [
+    "fields"
+  ],
+  "title": "Fields",
+  "type": "object"
+}

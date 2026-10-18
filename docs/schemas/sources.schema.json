@@ -1,0 +1,152 @@
+{
+  "$comment": "Generated from pim.config.models.Sources; do not edit by hand.",
+  "$defs": {
+    "Block": {
+      "additionalProperties": false,
+      "description": "One keyed block inside a sheet (FR-12). Columns are exact header text (FR-111).",
+      "properties": {
+        "columns": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "restrict to these headers; None = all",
+          "title": "Columns"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "key_column": {
+          "title": "Key Column",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "key_column"
+      ],
+      "title": "Block",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "title": "Blocks",
+          "type": "array"
+        },
+        "format": {
+          "enum": [
+            "xlsx",
+            "xlsm",
+            "csv",
+            "json"
+          ],
+          "title": "Format",
+          "type": "string"
+        },
+        "header_row": {
+          "default": 1,
+          "description": "1-based row holding the headers",
+          "minimum": 1,
+          "title": "Header Row",
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "key_column": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "exact header of the join key; required unless blocks are declared",
+          "title": "Key Column"
+        },
+        "optional": {
+          "default": false,
+          "description": "FR-13: proceed with a recorded warning when absent",
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "relative to the pack's declared source_root, or absolute",
+          "title": "Path",
+          "type": "string"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        },
+        "typed_columns": {
+          "additionalProperties": {
+            "enum": [
+              "number",
+              "date"
+            ],
+            "type": "string"
+          },
+          "description": "FR-8: everything else is read as text",
+          "title": "Typed Columns",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "format"
+      ],
+      "title": "Source",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "source_root": {
+      "description": "folder the relative source paths resolve against; READ-ONLY (FR-10)",
+      "title": "Source Root",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_root",
+    "sources"
+  ],
+  "title": "Sources",
+  "type": "object"
+}

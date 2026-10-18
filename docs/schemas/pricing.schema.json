@@ -1,0 +1,124 @@
+{
+  "$comment": "Generated from pim.config.models.Pricing; do not edit by hand.",
+  "$defs": {
+    "PricingRule": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "enum": [
+            "markup-on-cost",
+            "discount-off-msrp",
+            "fixed",
+            "msrp-passthrough"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "basis_note": {
+          "default": "",
+          "description": "who/when/why",
+          "title": "Basis Note",
+          "type": "string"
+        },
+        "factor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "0.35 = 35% markup or 35% discount; the fixed price for basis=fixed",
+          "title": "Factor"
+        },
+        "rounding": {
+          "default": "nearest-cent",
+          "enum": [
+            "none",
+            "nearest-cent",
+            ".95",
+            ".99",
+            "whole-dollar"
+          ],
+          "title": "Rounding",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "default",
+            "brand",
+            "category",
+            "derivative",
+            "row"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "scope_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "category name / mpn / (mpn,pack_qty) as 'MPN.P10'; None for default/brand",
+          "title": "Scope Value"
+        }
+      },
+      "required": [
+        "scope",
+        "basis"
+      ],
+      "title": "PricingRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fulfillment_vocabulary": {
+      "description": "FR-160",
+      "items": {
+        "type": "string"
+      },
+      "title": "Fulfillment Vocabulary",
+      "type": "array"
+    },
+    "margin_floor_pct": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "FR-157: flag (never refuse) rows below this margin",
+      "title": "Margin Floor Pct"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/PricingRule"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "unpriced_means": {
+      "default": "hold",
+      "description": "FR-156: explicit meaning of 'no price'",
+      "enum": [
+        "hold",
+        "price-hidden"
+      ],
+      "title": "Unpriced Means",
+      "type": "string"
+    }
+  },
+  "title": "Pricing",
+  "type": "object"
+}

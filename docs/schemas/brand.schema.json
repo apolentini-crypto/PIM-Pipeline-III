@@ -1,0 +1,132 @@
+{
+  "$comment": "Generated from pim.config.models.Brand; do not edit by hand.",
+  "$defs": {
+    "Environment": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "sandbox",
+            "live"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "store_hash_env": {
+          "description": "name of the env var holding the store hash (never the value, NFR-14)",
+          "title": "Store Hash Env",
+          "type": "string"
+        },
+        "token_env": {
+          "description": "name of the env var holding the API token (never the value)",
+          "title": "Token Env",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "store_hash_env",
+        "token_env"
+      ],
+      "title": "Environment",
+      "type": "object"
+    },
+    "MpnNormalisation": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "regex character class, e.g. A-Z0-9_-",
+          "title": "Allowed"
+        },
+        "replace": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Replace",
+          "type": "object"
+        },
+        "strip_whitespace": {
+          "default": true,
+          "title": "Strip Whitespace",
+          "type": "boolean"
+        },
+        "trim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "characters stripped from both ends",
+          "title": "Trim"
+        },
+        "upper": {
+          "default": true,
+          "title": "Upper",
+          "type": "boolean"
+        }
+      },
+      "title": "MpnNormalisation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bc_brand_name": {
+      "description": "exact brand name as it exists in BigCommerce; resolved to an id at run time",
+      "title": "Bc Brand Name",
+      "type": "string"
+    },
+    "brand_id": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "BigCommerce brand id = SKU prefix. None until the brand exists in BC.",
+      "title": "Brand Id"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "environments": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Environment"
+      },
+      "title": "Environments",
+      "type": "object"
+    },
+    "mpn_normalisation": {
+      "$ref": "#/$defs/MpnNormalisation"
+    },
+    "slug": {
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "title": "Slug",
+      "type": "string"
+    }
+  },
+  "required": [
+    "slug",
+    "display_name",
+    "bc_brand_name"
+  ],
+  "title": "Brand",
+  "type": "object"
+}

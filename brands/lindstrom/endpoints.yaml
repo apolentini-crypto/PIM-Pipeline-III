@@ -1,0 +1,6 @@
+endpoints:
+  bc:
+    adapter: bigcommerce
+    environments: [sandbox, live]
+    field_map: { name: name, mpn: mpn, ean: gtin, list_price: price, weight_kg: weight }
+    sentinel_empty_fields: [related_products]   # FR-65: BC's V2 [-1] auto-determine

@@ -1,0 +1,35 @@
+{
+  "$comment": "Generated from pim.config.models.Expectations; do not edit by hand.",
+  "additionalProperties": false,
+  "properties": {
+    "per_chapter": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Per Chapter",
+      "type": "object"
+    },
+    "roster_count": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Roster Count"
+    },
+    "tolerance": {
+      "default": 0,
+      "description": "rows of slack before an expectation fails",
+      "minimum": 0,
+      "title": "Tolerance",
+      "type": "integer"
+    }
+  },
+  "title": "Expectations",
+  "type": "object"
+}

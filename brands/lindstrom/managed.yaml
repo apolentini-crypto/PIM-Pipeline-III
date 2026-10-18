@@ -1,0 +1,3 @@
+managed: all-mapped
+unmanaged: [inventory_level, is_visible]     # admin-owned; drift-reported every run (FR-57, AC-26)
+owners: { name: catalog, mpn: catalog, ean: catalog, list_price: catalog, weight_kg: catalog }

@@ -1,0 +1,5 @@
+rules:
+  - { scope: default, basis: msrp-passthrough, rounding: nearest-cent, basis_note: "fixture" }
+  - { scope: derivative, scope_value: "15AGWM.P10", basis: markup-on-cost, factor: 0.40, rounding: ".95", basis_note: "fixture" }
+margin_floor_pct: 20
+unpriced_means: hold

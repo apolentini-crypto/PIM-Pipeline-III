@@ -1,0 +1,4 @@
+source_root: ./sources
+sources:
+  - { id: S1, path: products.csv, format: csv, key_column: "Part Number" }
+  - { id: S2, path: prices.csv, format: csv, key_column: "Model", optional: true }

@@ -1,0 +1,43 @@
+{
+  "$comment": "Generated from pim.config.models.Managed; do not edit by hand.",
+  "additionalProperties": false,
+  "properties": {
+    "managed": {
+      "anyOf": [
+        {
+          "const": "all-mapped",
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ],
+      "default": "all-mapped",
+      "title": "Managed"
+    },
+    "owners": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "owner component \u2192 list is reversed at load; here field-group \u2192 owner (FR-54..56)",
+      "title": "Owners",
+      "type": "object"
+    },
+    "unmanaged": {
+      "description": "FR-57: drift-reported, never written this run",
+      "items": {
+        "type": "string"
+      },
+      "title": "Unmanaged",
+      "type": "array"
+    }
+  },
+  "required": [
+    "owners"
+  ],
+  "title": "Managed",
+  "type": "object"
+}

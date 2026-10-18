@@ -1,0 +1,10 @@
+# Lindström brand pack — M0 stub. Sources/fields/derive get authored in M1–M2 from
+# docs/data/V1-ASSEMBLY-REFERENCE.md and LINDSTROM-BC-FIELD-MAPPING.xlsx.
+slug: lindstrom
+display_name: Lindström
+bc_brand_name: Lindström
+brand_id: 59
+mpn_normalisation: { upper: true, strip_whitespace: true, replace: { ".": "-" }, allowed: "A-Z0-9_-", trim: "-_" }
+environments:
+  sandbox: { kind: sandbox, store_hash_env: BC_SANDBOX_STORE_HASH, token_env: BC_SANDBOX_ACCESS_TOKEN }
+  live:    { kind: live,    store_hash_env: BC_STORE_HASH,         token_env: BC_ACCESS_TOKEN }

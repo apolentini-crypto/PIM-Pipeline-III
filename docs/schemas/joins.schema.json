@@ -1,0 +1,81 @@
+{
+  "$comment": "Generated from pim.config.models.Joins; do not edit by hand.",
+  "$defs": {
+    "Association": {
+      "additionalProperties": false,
+      "description": "FR-16: explicit code\u2192code mapping between two sources. Always wins over computed matches.",
+      "properties": {
+        "basis": {
+          "description": "who/when/why \u2014 never leave an association unexplained",
+          "title": "Basis",
+          "type": "string"
+        },
+        "from_key": {
+          "title": "From Key",
+          "type": "string"
+        },
+        "from_source": {
+          "title": "From Source",
+          "type": "string"
+        },
+        "to_key": {
+          "title": "To Key",
+          "type": "string"
+        },
+        "to_source": {
+          "title": "To Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_source",
+        "from_key",
+        "to_source",
+        "to_key",
+        "basis"
+      ],
+      "title": "Association",
+      "type": "object"
+    },
+    "KeyRule": {
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "default": "trim-only",
+          "enum": [
+            "trim-only",
+            "upper-trim",
+            "declared-normalisation"
+          ],
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "title": "KeyRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "associations": {
+      "items": {
+        "$ref": "#/$defs/Association"
+      },
+      "title": "Associations",
+      "type": "array"
+    },
+    "key": {
+      "$ref": "#/$defs/KeyRule"
+    },
+    "primary_source": {
+      "description": "the source whose key set defines the roster of canonical rows",
+      "title": "Primary Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "primary_source"
+  ],
+  "title": "Joins",
+  "type": "object"
+}

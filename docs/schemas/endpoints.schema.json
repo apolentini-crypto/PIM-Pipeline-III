@@ -1,0 +1,70 @@
+{
+  "$comment": "Generated from pim.config.models.Endpoints; do not edit by hand.",
+  "$defs": {
+    "EndpointBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "description": "registered adapter name, e.g. bigcommerce, csvexport, hub-door",
+          "title": "Adapter",
+          "type": "string"
+        },
+        "custom_fields": {
+          "description": "packed/derived fields emitted as custom fields",
+          "items": {
+            "type": "string"
+          },
+          "title": "Custom Fields",
+          "type": "array"
+        },
+        "environments": {
+          "description": "names from brand.yaml environments",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Environments",
+          "type": "array"
+        },
+        "field_map": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "canonical field \u2192 endpoint field (FR-104)",
+          "title": "Field Map",
+          "type": "object"
+        },
+        "sentinel_empty_fields": {
+          "description": "FR-65: write explicit empties, e.g. related_products",
+          "items": {
+            "type": "string"
+          },
+          "title": "Sentinel Empty Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "adapter",
+        "environments"
+      ],
+      "title": "EndpointBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "endpoints": {
+      "additionalProperties": {
+        "$ref": "#/$defs/EndpointBinding"
+      },
+      "minProperties": 1,
+      "title": "Endpoints",
+      "type": "object"
+    }
+  },
+  "required": [
+    "endpoints"
+  ],
+  "title": "Endpoints",
+  "type": "object"
+}

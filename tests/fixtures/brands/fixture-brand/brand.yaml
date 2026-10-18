@@ -1,0 +1,7 @@
+slug: fixture-brand
+display_name: Fixture Brand
+bc_brand_name: Fixture Brand
+brand_id: 99
+mpn_normalisation: { upper: true, strip_whitespace: true, replace: { ".": "-" }, allowed: "A-Z0-9_-", trim: "-_" }
+environments:
+  sandbox: { kind: sandbox, store_hash_env: BC_SANDBOX_HASH, token_env: BC_SANDBOX_TOKEN }

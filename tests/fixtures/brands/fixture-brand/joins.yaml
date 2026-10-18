@@ -1,0 +1,4 @@
+primary_source: S1
+key: { rule: trim-only }
+associations:
+  - { from_source: S2, from_key: "TL 15A-GW", to_source: S1, to_key: "15AGWM", basis: "fixture: price book code differs from site code" }

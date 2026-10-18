@@ -1,0 +1,27 @@
+{
+  "$comment": "Generated from pim.config.models.Vocabulary; do not edit by hand.",
+  "additionalProperties": false,
+  "properties": {
+    "facets": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "description": "facet key \u2192 frozen allowed slugs (FR-30)",
+      "title": "Facets",
+      "type": "object"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "facets"
+  ],
+  "title": "Vocabulary",
+  "type": "object"
+}

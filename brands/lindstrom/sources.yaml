@@ -1,0 +1,10 @@
+# READ-ONLY copy of the masters (FR-10). Paths relative to source_root.
+source_root: "C:/Users/apole/OneDrive - Castletronics/Castletronics Shared/Business Folders/Brand Distribution/Lindstrom/2026/Data to Merge"
+sources:
+  - { id: S1, path: "Lindstrom 2026 - Merged Product Data and Price Book (FIXED).xlsx", format: xlsx, sheet: Hoja1, header_row: 1, key_column: PRODUCT }
+  - { id: S2, path: "Lindstrom - Category Assignments.xlsx", format: xlsx, sheet: "Product Categories", header_row: 1, key_column: "Product (SKU)" }
+  - { id: S3, path: "scraper_output.json", format: json, key_column: product_code }
+  - { id: S4, path: "technical_details_matrix.csv", format: csv, key_column: Product }
+  - { id: S5, path: "Lindstrom Image Links - FULL 322.xlsx", format: xlsx, sheet: "Image & Doc Links", header_row: 1, key_column: "Product Number" }
+  - { id: S6, path: "Lindstrom - ESD Determination.xlsx", format: xlsx, sheet: "ESD Determination", header_row: 1, key_column: "Product" }
+  - { id: S7, path: "Lindstrom - Q80 - 2026 Price Book - 8-1-26.xlsx", format: xlsx, sheet: Sheet1, header_row: 1, key_column: Model, optional: true }

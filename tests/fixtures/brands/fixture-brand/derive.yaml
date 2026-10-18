@@ -1,0 +1,11 @@
+facets:
+  head: { rule: slug, input: head_type }
+  len:
+    rule: band
+    input: length_mm
+    bands: [ { lt: "120", value: short }, { lt: "160", value: medium }, { else: true, value: long } ]
+    boundary: lower-inclusive
+    display_pair: len_disp
+packed:
+  filter_metadata: { rule: pack, keys: [head, len, len_disp], vocabulary_exempt: [len_disp], max_length: 250 }
+page_type_value: tool

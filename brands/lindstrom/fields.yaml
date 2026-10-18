@@ -1,0 +1,8 @@
+# M0 stub — the full ~70-field map is authored in M1 from LINDSTROM-BC-FIELD-MAPPING.xlsx.
+fields:
+  mpn:         { primary: { source: S2, column: "Product (SKU)" }, confirmed: "Y", required: true }
+  name:        { primary: { source: S1, column: "en_US#SHORT DESCRIPTION P" }, confirmed: "Y", required: true }
+  category_l2: { primary: { source: S2, column: "Category (L2)" }, required: true }
+  ean:         { primary: { source: S1, column: "EAN CODE" }, confirmed: "Y" }
+  list_price:  { primary: { source: S1, column: "2026 List Price" }, type: number, confirmed: "Y" }
+  weight_kg:   { primary: { source: S1, column: "UNITWEIGHT kg" }, type: number, unit: { parse: declared, unit: kg }, confirmed: "Y" }

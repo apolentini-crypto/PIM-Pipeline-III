@@ -1,0 +1,563 @@
+{
+  "$comment": "Generated from pim.config.models.Derive; do not edit by hand.",
+  "$defs": {
+    "Band": {
+      "additionalProperties": false,
+      "properties": {
+        "else": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Else"
+        },
+        "lt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lt"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "Band",
+      "type": "object"
+    },
+    "FacetScope": {
+      "additionalProperties": false,
+      "properties": {
+        "absent_in": {
+          "description": "FR-29: categories where it must be absent",
+          "items": {
+            "type": "string"
+          },
+          "title": "Absent In",
+          "type": "array"
+        },
+        "chapters": {
+          "description": "FR-29: categories where this facet must be present",
+          "items": {
+            "type": "string"
+          },
+          "title": "Chapters",
+          "type": "array"
+        },
+        "filtering": {
+          "default": false,
+          "description": "FR-113: a blank filtering key is a blocking failure",
+          "title": "Filtering",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "chapters"
+      ],
+      "title": "FacetScope",
+      "type": "object"
+    },
+    "RuleBand": {
+      "additionalProperties": false,
+      "properties": {
+        "bands": {
+          "items": {
+            "$ref": "#/$defs/Band"
+          },
+          "minItems": 1,
+          "title": "Bands",
+          "type": "array"
+        },
+        "boundary": {
+          "description": "FR-28: which side a boundary value joins \u2014 declared, never defaulted silently",
+          "enum": [
+            "lower-inclusive",
+            "upper-inclusive"
+          ],
+          "title": "Boundary",
+          "type": "string"
+        },
+        "display_pair": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FR-114: emit X_disp from this raw field",
+          "title": "Display Pair"
+        },
+        "input": {
+          "title": "Input",
+          "type": "string"
+        },
+        "rule": {
+          "const": "band",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "input",
+        "bands",
+        "boundary"
+      ],
+      "title": "RuleBand",
+      "type": "object"
+    },
+    "RuleCompose": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "description": "format string over canonical fields, e.g. '{length_mm} mm / {length_in} in'",
+          "title": "Format",
+          "type": "string"
+        },
+        "omit_if_missing": {
+          "description": "FR-35: if any of these is empty, emit nothing",
+          "items": {
+            "type": "string"
+          },
+          "title": "Omit If Missing",
+          "type": "array"
+        },
+        "rule": {
+          "const": "compose",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "format"
+      ],
+      "title": "RuleCompose",
+      "type": "object"
+    },
+    "RuleCopy": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "title": "Input",
+          "type": "string"
+        },
+        "rule": {
+          "const": "copy",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "input"
+      ],
+      "title": "RuleCopy",
+      "type": "object"
+    },
+    "RuleFamily": {
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "description": "canonical field whose equal values form a family (e.g. product_block)",
+          "title": "By",
+          "type": "string"
+        },
+        "order": {
+          "default": "mpn-numeric",
+          "enum": [
+            "mpn-numeric",
+            "mpn-text",
+            "declared"
+          ],
+          "title": "Order",
+          "type": "string"
+        },
+        "rule": {
+          "const": "family",
+          "title": "Rule",
+          "type": "string"
+        },
+        "union": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "path of a declared twins CSV",
+          "title": "Union"
+        }
+      },
+      "required": [
+        "rule",
+        "by"
+      ],
+      "title": "RuleFamily",
+      "type": "object"
+    },
+    "RuleMap": {
+      "additionalProperties": false,
+      "properties": {
+        "else": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Else"
+        },
+        "input": {
+          "title": "Input",
+          "type": "string"
+        },
+        "rule": {
+          "const": "map",
+          "title": "Rule",
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rule",
+        "input",
+        "values"
+      ],
+      "title": "RuleMap",
+      "type": "object"
+    },
+    "RulePack": {
+      "additionalProperties": false,
+      "properties": {
+        "item_separator": {
+          "default": ";",
+          "title": "Item Separator",
+          "type": "string"
+        },
+        "keys": {
+          "description": "declared key order (FR-32, FR-117 append-only)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Keys",
+          "type": "array"
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FR-34: halt, never truncate",
+          "title": "Max Length"
+        },
+        "overflow_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Overflow Field"
+        },
+        "pair_separator": {
+          "default": "=",
+          "title": "Pair Separator",
+          "type": "string"
+        },
+        "rule": {
+          "const": "pack",
+          "title": "Rule",
+          "type": "string"
+        },
+        "vocabulary_exempt": {
+          "description": "display-only keys like cap_disp",
+          "items": {
+            "type": "string"
+          },
+          "title": "Vocabulary Exempt",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rule",
+        "keys"
+      ],
+      "title": "RulePack",
+      "type": "object"
+    },
+    "RulePrecedence": {
+      "additionalProperties": false,
+      "properties": {
+        "of": {
+          "description": "A ELSE B ELSE C \u2014 never both",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Of",
+          "type": "array"
+        },
+        "rule": {
+          "const": "precedence",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "of"
+      ],
+      "title": "RulePrecedence",
+      "type": "object"
+    },
+    "RuleSkuPattern": {
+      "additionalProperties": false,
+      "properties": {
+        "else": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Else"
+        },
+        "input": {
+          "default": "mpn",
+          "title": "Input",
+          "type": "string"
+        },
+        "patterns": {
+          "description": "[{match: '^RX', value: ergo}, ...] anchored regexes, first wins",
+          "items": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "title": "Patterns",
+          "type": "array"
+        },
+        "rule": {
+          "const": "sku-pattern",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "patterns"
+      ],
+      "title": "RuleSkuPattern",
+      "type": "object"
+    },
+    "RuleSlug": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "title": "Input",
+          "type": "string"
+        },
+        "rule": {
+          "const": "slug",
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "input"
+      ],
+      "title": "RuleSlug",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "display": {
+      "additionalProperties": {
+        "discriminator": {
+          "mapping": {
+            "band": "#/$defs/RuleBand",
+            "compose": "#/$defs/RuleCompose",
+            "copy": "#/$defs/RuleCopy",
+            "family": "#/$defs/RuleFamily",
+            "map": "#/$defs/RuleMap",
+            "pack": "#/$defs/RulePack",
+            "precedence": "#/$defs/RulePrecedence",
+            "sku-pattern": "#/$defs/RuleSkuPattern",
+            "slug": "#/$defs/RuleSlug"
+          },
+          "propertyName": "rule"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/RuleCopy"
+          },
+          {
+            "$ref": "#/$defs/RuleMap"
+          },
+          {
+            "$ref": "#/$defs/RuleSlug"
+          },
+          {
+            "$ref": "#/$defs/RuleBand"
+          },
+          {
+            "$ref": "#/$defs/RulePrecedence"
+          },
+          {
+            "$ref": "#/$defs/RuleSkuPattern"
+          },
+          {
+            "$ref": "#/$defs/RuleCompose"
+          },
+          {
+            "$ref": "#/$defs/RulePack"
+          },
+          {
+            "$ref": "#/$defs/RuleFamily"
+          }
+        ]
+      },
+      "description": "spec display strings (compose)",
+      "title": "Display",
+      "type": "object"
+    },
+    "facets": {
+      "additionalProperties": {
+        "discriminator": {
+          "mapping": {
+            "band": "#/$defs/RuleBand",
+            "compose": "#/$defs/RuleCompose",
+            "copy": "#/$defs/RuleCopy",
+            "family": "#/$defs/RuleFamily",
+            "map": "#/$defs/RuleMap",
+            "pack": "#/$defs/RulePack",
+            "precedence": "#/$defs/RulePrecedence",
+            "sku-pattern": "#/$defs/RuleSkuPattern",
+            "slug": "#/$defs/RuleSlug"
+          },
+          "propertyName": "rule"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/RuleCopy"
+          },
+          {
+            "$ref": "#/$defs/RuleMap"
+          },
+          {
+            "$ref": "#/$defs/RuleSlug"
+          },
+          {
+            "$ref": "#/$defs/RuleBand"
+          },
+          {
+            "$ref": "#/$defs/RulePrecedence"
+          },
+          {
+            "$ref": "#/$defs/RuleSkuPattern"
+          },
+          {
+            "$ref": "#/$defs/RuleCompose"
+          },
+          {
+            "$ref": "#/$defs/RulePack"
+          },
+          {
+            "$ref": "#/$defs/RuleFamily"
+          }
+        ]
+      },
+      "title": "Facets",
+      "type": "object"
+    },
+    "families": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RuleFamily"
+      },
+      "title": "Families",
+      "type": "object"
+    },
+    "packed": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RulePack"
+      },
+      "description": "packed custom fields, e.g. filter_metadata, spec_display",
+      "title": "Packed",
+      "type": "object"
+    },
+    "page_type_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "FR-121 ct_page_type; absent \u21d2 default archetype",
+      "title": "Page Type Value"
+    },
+    "scopes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FacetScope"
+      },
+      "title": "Scopes",
+      "type": "object"
+    },
+    "seo": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RuleCompose"
+      },
+      "title": "Seo",
+      "type": "object"
+    }
+  },
+  "title": "Derive",
+  "type": "object"
+}
