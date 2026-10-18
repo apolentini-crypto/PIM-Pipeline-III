@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIM Pipeline III — System Workflow</title>
+<style>
+  :root{
+    --bg:#faf9f7; --fg:#1f2328; --muted:#6b7280;
+    --band:#8a8f98; --boxbg:#ffffff; --dbbg:#eef2f7;
+    --accent:#c2600a; --accentbg:#fdf3e7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16181d; --fg:#e6e8eb; --muted:#9aa1ab;
+      --band:#5c6370; --boxbg:#1e2128; --dbbg:#232a34;
+      --accent:#f0a24a; --accentbg:#2a2118;
+    }
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  main{max-width:1020px;margin:0 auto;padding:28px 20px 48px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  p.lead{color:var(--muted);margin:0 0 20px;font-size:13.5px;}
+  figure{margin:0;}
+  svg{max-width:100%;height:auto;display:block;color:var(--fg);}
+  figcaption{color:var(--muted);font-size:12.5px;margin-top:14px;max-width:72ch;}
+  .box{fill:var(--boxbg);stroke:var(--fg);stroke-width:1.3;}
+  .db{fill:var(--dbbg);stroke:var(--fg);stroke-width:2.2;}
+  .band{fill:none;stroke:var(--band);stroke-width:1.2;stroke-dasharray:6 5;}
+  .op{fill:var(--accentbg);stroke:var(--accent);stroke-width:1.6;}
+  .pill{fill:var(--boxbg);stroke:var(--band);stroke-width:1.1;}
+  .flow{stroke:var(--fg);stroke-width:1.5;fill:none;}
+  .ctl{stroke:var(--accent);stroke-width:1.5;fill:none;stroke-dasharray:5 4;}
+  .decl{stroke:var(--band);stroke-width:1.2;fill:none;stroke-dasharray:3 4;}
+  .t{font-size:13px;font-weight:600;fill:var(--fg);}
+  .s{font-size:11px;fill:var(--muted);}
+  .bt{font-size:11.5px;font-weight:700;letter-spacing:.08em;fill:var(--band);}
+  .lab{font-size:11px;fill:var(--fg);}
+  .clab{font-size:11px;fill:var(--accent);font-weight:600;}
+  .dlab{font-size:10.5px;fill:var(--muted);font-style:italic;}
+  .you{font-size:10px;font-weight:700;letter-spacing:.06em;fill:var(--accent);}
+</style>
+</head>
+<body>
+<main>
+  <h1>PIM Pipeline III — System Workflow</h1>
+  <p class="lead">Solid arrows are data flowing; dashed orange arrows are decisions that come to you. Orange boxes are your control points. Gray dotted tags are declarations from the brand pack — including each brand's own normalization function.</p>
+
+  <figure>
+  <svg viewBox="0 0 980 1410" role="img"
+       aria-label="Workflow: vendor spreadsheets and a brand pack of declarations feed the PIM core, which validates the pack, ingests the files, normalizes them using the brand's declared normalization function, merges on the product code, applies operator overrides, derives facets and specs, and lands everything in the product database. Bulk CSV edits and conflict rulings come from the operator as overrides. Built data then feeds the distribution chain: change set, snapshot and gates, staged publish with before-images, verification, and a run report — with the operator confirming large changes and approving any rollback. Channels hang off one adapter interface.">
+
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+      </marker>
+      <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <!-- ============ INPUTS ============ -->
+    <rect class="box" x="120" y="28" width="230" height="58" rx="8"/>
+    <text class="t" x="235" y="52" text-anchor="middle">Vendor files</text>
+    <text class="s" x="235" y="70" text-anchor="middle">any number · read-only</text>
+
+    <rect class="box" x="390" y="28" width="230" height="58" rx="8"/>
+    <text class="t" x="505" y="52" text-anchor="middle">Brand pack</text>
+    <text class="s" x="505" y="70" text-anchor="middle">declarations only — no code</text>
+
+    <line class="flow" x1="235" y1="86" x2="235" y2="196" marker-end="url(#a)"/>
+    <text class="lab" x="243" y="150">the data</text>
+    <line class="flow" x1="505" y1="86" x2="505" y2="128" marker-end="url(#a)"/>
+    <line class="flow" x1="505" y1="128" x2="445" y2="128"/>
+    <line class="flow" x1="445" y1="128" x2="445" y2="150" marker-end="url(#a)"/>
+    <text class="lab" x="513" y="112">how to read + normalize it</text>
+
+    <!-- ============ PIM CORE BAND ============ -->
+    <rect class="band" x="52" y="140" width="600" height="700" rx="12"/>
+    <text class="bt" x="70" y="163">PIM CORE — ASSEMBLE</text>
+
+    <!-- 1 validate -->
+    <rect class="box" x="330" y="150" width="230" height="46" rx="8"/>
+    <text class="t" x="445" y="169" text-anchor="middle">1 · Validate the pack</text>
+    <text class="s" x="445" y="185" text-anchor="middle">every error at once, before any file is read</text>
+
+    <!-- 2 ingest -->
+    <rect class="box" x="120" y="196" width="230" height="46" rx="8"/>
+    <text class="t" x="235" y="215" text-anchor="middle">2 · Ingest the files</text>
+    <text class="s" x="235" y="231" text-anchor="middle">values read as text · content hashes kept</text>
+    <line class="flow" x1="445" y1="196" x2="445" y2="216"/>
+    <line class="flow" x1="445" y1="216" x2="358" y2="216" marker-end="url(#a)"/>
+
+    <line class="flow" x1="235" y1="242" x2="235" y2="264"/>
+    <line class="flow" x1="235" y1="264" x2="350" y2="264"/>
+    <line class="flow" x1="350" y1="264" x2="350" y2="286" marker-end="url(#a)"/>
+
+    <!-- 3 NORMALIZE (per-brand function) -->
+    <rect class="box" x="235" y="288" width="230" height="56" rx="8"/>
+    <text class="t" x="350" y="308" text-anchor="middle">3 · Normalize</text>
+    <text class="s" x="350" y="323" text-anchor="middle">this brand's normalization function:</text>
+    <text class="s" x="350" y="337" text-anchor="middle">keys · units · decimals · encoding · aliases</text>
+    <!-- declaration tag -->
+    <rect class="pill" x="76" y="298" width="140" height="36" rx="18"/>
+    <text class="dlab" x="146" y="313" text-anchor="middle">normalize.yaml</text>
+    <text class="dlab" x="146" y="327" text-anchor="middle">declared per brand</text>
+    <line class="decl" x1="216" y1="316" x2="233" y2="316"/>
+
+    <line class="flow" x1="350" y1="344" x2="350" y2="368" marker-end="url(#a)"/>
+    <text class="lab" x="358" y="362">clean values, every column joined to the key</text>
+
+    <!-- 4 merge -->
+    <rect class="box" x="235" y="370" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="390" text-anchor="middle">4 · Merge on the key</text>
+    <text class="s" x="350" y="406" text-anchor="middle">one record per product code</text>
+
+    <line class="flow" x1="350" y1="420" x2="350" y2="450" marker-end="url(#a)"/>
+
+    <!-- 5 overrides -->
+    <rect class="box" x="235" y="452" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="472" text-anchor="middle">5 · Apply your overrides</text>
+    <text class="s" x="350" y="488" text-anchor="middle">each guarded by its recorded before-value</text>
+
+    <line class="flow" x1="350" y1="502" x2="350" y2="532" marker-end="url(#a)"/>
+
+    <!-- 6 derive -->
+    <rect class="box" x="235" y="534" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="554" text-anchor="middle">6 · Derive</text>
+    <text class="s" x="350" y="570" text-anchor="middle">facets · specs · families · SEO — gated</text>
+
+    <line class="flow" x1="350" y1="584" x2="350" y2="614" marker-end="url(#a)"/>
+    <text class="lab" x="358" y="606">complete records</text>
+
+    <!-- DATABASE -->
+    <rect class="db" x="180" y="616" width="340" height="86" rx="10"/>
+    <text class="t" x="350" y="642" text-anchor="middle">PRODUCT DATABASE</text>
+    <text class="s" x="350" y="660" text-anchor="middle">one complete record per SKU</text>
+    <text class="s" x="350" y="676" text-anchor="middle">every value traceable to a file cell, a rule, or your override</text>
+    <text class="s" x="350" y="692" text-anchor="middle">rebuilt identically from the same inputs, every time</text>
+
+    <!-- conflict halt (operator) -->
+    <rect class="op" x="700" y="370" width="230" height="56" rx="8"/>
+    <text class="you" x="715" y="387">YOU RULE</text>
+    <text class="t" x="815" y="404" text-anchor="middle">Sources disagree? HALT</text>
+    <text class="s" x="815" y="420" text-anchor="middle">SKU, field, both values, both columns</text>
+    <line class="ctl" x1="465" y1="395" x2="698" y2="395" marker-end="url(#ao)"/>
+    <path class="ctl" d="M 815 426 L 815 477 L 467 477" marker-end="url(#ao)"/>
+    <text class="clab" x="620" y="470">your ruling → an override</text>
+
+    <!-- CSV bulk edit (operator) -->
+    <rect class="op" x="700" y="606" width="230" height="72" rx="8"/>
+    <text class="you" x="715" y="623">YOU EDIT</text>
+    <text class="t" x="815" y="640" text-anchor="middle">Bulk edits in Excel</text>
+    <text class="s" x="815" y="656" text-anchor="middle">export → edit → import (checked</text>
+    <text class="s" x="815" y="670" text-anchor="middle">for spreadsheet damage, diffed first)</text>
+    <line class="flow" x1="520" y1="634" x2="698" y2="634" marker-end="url(#a)"/>
+    <text class="lab" x="545" y="628">export-csv</text>
+    <path class="ctl" d="M 700 678 L 610 678 L 610 522 L 467 490" marker-end="url(#ao)"/>
+    <text class="clab" x="622" y="552">imports land as</text>
+    <text class="clab" x="622" y="566">reversible overrides</text>
+
+    <!-- contract arrow -->
+    <line class="flow" x1="350" y1="702" x2="350" y2="782" marker-end="url(#a)"/>
+    <rect class="pill" x="238" y="726" width="224" height="30" rx="15"/>
+    <text class="s" x="350" y="745" text-anchor="middle">built data — the one contract</text>
+
+    <!-- also feeds export -->
+    <path class="flow" d="M 520 667 L 660 667 L 660 782" marker-end="url(#a)"/>
+    <text class="lab" x="668" y="740">exports · reports</text>
+
+    <!-- ============ DISTRIBUTION BAND ============ -->
+    <rect class="band" x="52" y="784" width="600" height="470" rx="12"/>
+    <text class="bt" x="70" y="807">DISTRIBUTION CHAIN — PUBLISH</text>
+
+    <!-- 7 change set -->
+    <rect class="box" x="235" y="816" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="836" text-anchor="middle">7 · Change set</text>
+    <text class="s" x="350" y="852" text-anchor="middle">field-level diff vs the live store</text>
+    <line class="flow" x1="350" y1="866" x2="350" y2="894" marker-end="url(#a)"/>
+
+    <!-- 8 snapshot -->
+    <rect class="box" x="235" y="896" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="916" text-anchor="middle">8 · Snapshot + gates</text>
+    <text class="s" x="350" y="932" text-anchor="middle">refuses to write without a backup</text>
+    <line class="flow" x1="350" y1="946" x2="350" y2="974" marker-end="url(#a)"/>
+
+    <!-- 9 staged publish -->
+    <rect class="box" x="235" y="976" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="996" text-anchor="middle">9 · Staged publish</text>
+    <text class="s" x="350" y="1012" text-anchor="middle">dry-run → batch → full · before-image per row</text>
+    <line class="flow" x1="350" y1="1026" x2="350" y2="1054" marker-end="url(#a)"/>
+    <text class="lab" x="358" y="1046">every written field</text>
+
+    <!-- 10 verify -->
+    <rect class="box" x="235" y="1056" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="1076" text-anchor="middle">10 · Verify</text>
+    <text class="s" x="350" y="1092" text-anchor="middle">reads it all back — never trusts the write</text>
+    <line class="flow" x1="350" y1="1106" x2="350" y2="1134" marker-end="url(#a)"/>
+
+    <!-- 11 report -->
+    <rect class="box" x="235" y="1136" width="230" height="50" rx="8"/>
+    <text class="t" x="350" y="1156" text-anchor="middle">11 · Run report</text>
+    <text class="s" x="350" y="1172" text-anchor="middle">measured numbers + the rollback handle</text>
+
+    <!-- confirm big change (operator) -->
+    <rect class="op" x="700" y="816" width="230" height="56" rx="8"/>
+    <text class="you" x="715" y="833">YOU CONFIRM</text>
+    <text class="t" x="815" y="850" text-anchor="middle">Change unusually big?</text>
+    <text class="s" x="815" y="866" text-anchor="middle">e.g. 288 prices all moving down</text>
+    <line class="ctl" x1="465" y1="841" x2="698" y2="841" marker-end="url(#ao)"/>
+    <path class="ctl" d="M 760 872 L 760 921 L 467 921" marker-end="url(#ao)"/>
+    <text class="clab" x="590" y="914">only then may it write</text>
+
+    <!-- verify fail (operator) -->
+    <rect class="op" x="700" y="1036" width="230" height="72" rx="8"/>
+    <text class="you" x="715" y="1053">YOU DECIDE</text>
+    <text class="t" x="815" y="1070" text-anchor="middle">Mismatch? writes HALT</text>
+    <text class="s" x="815" y="1086" text-anchor="middle">rollback diff shown; restores exactly</text>
+    <text class="s" x="815" y="1100" text-anchor="middle">the fields that run wrote — no others</text>
+    <line class="ctl" x1="465" y1="1081" x2="698" y2="1081" marker-end="url(#ao)"/>
+    <path class="ctl" d="M 760 1108 L 760 1178 L 610 1178 L 610 1012 L 467 1008" marker-end="url(#ao)"/>
+    <text class="clab" x="620" y="1172">rollback ← before-images</text>
+
+    <!-- channels -->
+    <line class="flow" x1="350" y1="1186" x2="350" y2="1278" marker-end="url(#a)"/>
+    <rect class="pill" x="238" y="1212" width="224" height="30" rx="15"/>
+    <text class="s" x="350" y="1231" text-anchor="middle">one adapter interface</text>
+
+    <rect class="box" x="90" y="1322" width="170" height="52" rx="8"/>
+    <text class="t" x="175" y="1344" text-anchor="middle">BigCommerce</text>
+    <text class="s" x="175" y="1360" text-anchor="middle">create · update · delete</text>
+
+    <rect class="box" x="290" y="1322" width="170" height="52" rx="8"/>
+    <text class="t" x="375" y="1344" text-anchor="middle">CSV / JSON export</text>
+    <text class="s" x="375" y="1360" text-anchor="middle">files, same interface</text>
+
+    <rect class="box" x="490" y="1322" width="170" height="52" rx="8" stroke-dasharray="5 4"/>
+    <text class="t" x="575" y="1344" text-anchor="middle">Future channels</text>
+    <text class="s" x="575" y="1360" text-anchor="middle">no engine changes</text>
+
+    <line class="flow" x1="350" y1="1278" x2="175" y2="1320" marker-end="url(#a)"/>
+    <line class="flow" x1="350" y1="1278" x2="375" y2="1320" marker-end="url(#a)"/>
+    <line class="flow" x1="350" y1="1278" x2="575" y2="1320" marker-end="url(#a)"/>
+  </svg>
+  <figcaption>
+    The two subsystems and the seam between them. The PIM core assembles any brand's
+    files into the product database — normalized by that brand's own declared
+    normalization function, merged key-aligned, complete, every value traceable. The
+    distribution chain publishes that database to channels, and can never write
+    without a diff you could have seen, a backup it just took, and a verification it
+    performs itself. Adding a brand changes only the two inputs at the top; adding a
+    channel changes only the bottom row.
+  </figcaption>
+  </figure>
+</main>
+</body>
+</html>

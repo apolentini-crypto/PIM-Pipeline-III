@@ -1,32 +1,65 @@
 # PIM-Pipeline-III
 
-Third-generation Castletronics product data pipeline: ingest vendor spreadsheets
-for **any brand**, normalise to one canonical row per SKU, derive facets/specs/
-families, and publish to a commerce endpoint — validated, verified and reversible.
+Third-generation Castletronics product data pipeline: assemble any brand's
+product information from an arbitrary set of vendor files, aligned to a product
+code, into one complete record per SKU — then publish that database to sales
+channels, validated, verified and reversible.
 
-Nothing is implemented yet. This repository currently holds requirements only.
+**Nothing is implemented yet.** This repository holds requirements, architecture
+and measured data analysis.
+
+> **Picking this up cold — start with [HANDOFF.md](HANDOFF.md).** It is
+> self-contained: current state, binding decisions, open questions, where the
+> source data lives, and the next steps in order.
 
 ## Documents
 
 | Path | What it is |
 |---|---|
-| [docs/requirements/MULTI-BRAND-LOADER-REQUIREMENTS.md](docs/requirements/MULTI-BRAND-LOADER-REQUIREMENTS.md) | Multi-Brand Product Data Loader — Requirements Specification **v1.1** (2026-08-17), status *For implementation*. Brand packs, endpoint plugin, change sets, validation, backup/rollback. |
-| [docs/requirements/LOADER-NG-REQUIREMENTS.md](docs/requirements/LOADER-NG-REQUIREMENTS.md) | `CT-LOADER-NG-SRS-001` — Next-Generation Loader Requirements (2026-08-17), status *Draft for design — not baselined*. Generalization, gates and controls, BigCommerce write semantics, truth rules. |
+| [HANDOFF.md](HANDOFF.md) | **Start here.** Session handoff — state, decisions, open questions, next steps. |
+| [docs/requirements/PIM-BASELINE-REQUIREMENTS.md](docs/requirements/PIM-BASELINE-REQUIREMENTS.md) | **`CT-PIM-SRS-001` v1.0 — BASELINED, BINDING.** The single requirements specification: merges and supersedes both source specs, with a conflict-resolution log (§12) and full traceability (§13). Where anything disagrees, this document wins. |
+| [docs/architecture/PIM-ARCHITECTURE-DESIGN.md](docs/architecture/PIM-ARCHITECTURE-DESIGN.md) | `CT-PIM-ARCH-001` v1.0 — top-down architecture and design: ADRs, codebase layout, SQLite schema, brand-pack design, BigCommerce adapter, verification framework, CLI, testing strategy, M0–M6 roadmap. |
+| [docs/architecture/PIM-WORKFLOW.html](docs/architecture/PIM-WORKFLOW.html) | The system workflow diagram — data flow and the operator control points. Open in a browser. |
+| [docs/data/LINDSTROM-DATA-PROFILE.md](docs/data/LINDSTROM-DATA-PROFILE.md) | `CT-PIM-DATA-001` — measured column-level profile of the real Lindström sources: lineage, key spaces, coverage, format hazards, defects found. |
+| [docs/data/V1-ASSEMBLY-REFERENCE.md](docs/data/V1-ASSEMBLY-REFERENCE.md) | `CT-PIM-V1-ASM-001` — how the existing loader assembles the dataset (joins, precedence, derivation, packing), read from its source. The authoring basis for the Lindström brand pack. |
+| [docs/architecture/V1-LOADER-ASSESSMENT.md](docs/architecture/V1-LOADER-ASSESSMENT.md) | `CT-PIM-V1-ASSESS-001` — why the existing loader cannot extend to other brands, with file:line evidence, and what to harvest from it. |
+| [docs/requirements/MULTI-BRAND-LOADER-REQUIREMENTS.md](docs/requirements/MULTI-BRAND-LOADER-REQUIREMENTS.md)<br>[docs/requirements/LOADER-NG-REQUIREMENTS.md](docs/requirements/LOADER-NG-REQUIREMENTS.md) | The two 2026-08-17 source specifications. **Superseded** by the baseline — retained for provenance. Never cite as binding. |
 
-Both are dated 2026-08-17 and overlap substantially. **Which one is binding has not
-been decided** — resolve before any design or code is written against them.
+## Binding decisions (operator, 2026-08-19)
+
+- **D-1** Source specs **merged**; the baseline is the only binding document.
+- **D-2** Built data: **SQLite authoritative + deterministic canonical text export**
+  for diffing and version control.
+- **D-3** On verification failure: **halt and wait for the operator**; never auto-rollback.
+- **D-4** Stack: **Python 3.12+ single CLI**, justified in ADR-1.
+- **D-5** Two subsystems: **PIM core** (system of record) and **Distribution chain**
+  (channel publication), joined by the built-data contract.
+- **D-6** **Code must not drive the brands:** the engine defines operations; the brand
+  pack defines everything about the data — fields, types, formats, amounts,
+  relationships. No field name, brand, count, or format in code.
+- **D-7** **Primary/alias conflicts halt** for operator ruling via override; neither
+  value ships un-ruled.
+
+Mandatory guarantees: nothing unwritable · backup and rollback on every run ·
+per-field change selection · CSV export/import for bulk edits.
+
+Open questions are tracked in the baseline spec **§11.2** and summarised in
+[HANDOFF.md](HANDOFF.md) §4 — OQ-1 and OQ-2 block migration; OQ-16/17 affect the
+Lindström pack.
 
 ## Ground rules carried forward from the first-generation loader
 
 - Every catastrophic defect in this program's history was **silent**. A check that can
-  only report success is not a check (`LOADER-NG §7`).
+  only report success is not a check (`SRS §0.3, §4.9`).
 - Safety comes from **visibility and reversibility, never prohibition**. A field the
-  operator cannot change is a defect, not a safeguard (`MULTI-BRAND §0.1, P2`).
-- Never put anything on the site that isn't true. Where the vendor is silent, omit.
+  operator cannot change is a defect, not a safeguard (`SRS §0.2, P2`).
+- Never put anything on the site that isn't true. Where the vendor is silent, omit
+  (`SRS §4.12`).
 
 ## Repository conventions
 
-- Vendor spreadsheets, build output, ledgers, snapshots and logs are **not** committed
-  (see `.gitignore`). Test fixtures that must be versioned are added with `git add -f`.
-- Secrets are supplied at run time and never stored in the working folder (`NFR-003`).
+- Vendor spreadsheets, build output (`var/`), ledgers, snapshots and logs are **not**
+  committed (see `.gitignore`). Test fixtures that must be versioned are added with
+  `git add -f`.
+- Secrets are supplied at run time and never stored in the working folder (`NFR-14`).
 - Line endings: LF in the repository, native in the working tree (see `.gitattributes`).
