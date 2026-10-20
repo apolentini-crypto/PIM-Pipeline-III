@@ -24,9 +24,9 @@ def corrupt_pack(ctx):
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
     (dst / "managed.yaml").unlink()                                     # missing required file
-    (dst / "brand.yaml").write_text((dst / "brand.yaml").read_text() + "\nslugg: oops\n")  # unknown key
-    f = (dst / "fields.yaml").read_text().replace("source: S2", "source: S9")  # dangling source id
-    (dst / "fields.yaml").write_text(f)
+    (dst / "brand.yaml").write_text((dst / "brand.yaml").read_text(encoding="utf-8") + "\nslugg: oops\n")  # unknown key
+    f = (dst / "fields.yaml").read_text(encoding="utf-8").replace("source: S2", "source: S9")  # dangling source id
+    (dst / "fields.yaml").write_text(f, encoding="utf-8")
     bad = dict(ctx)
     bad["pack_dir"] = str(dst)
     bad["expected_min_errors"] = 3
@@ -65,7 +65,7 @@ def _edit(path: Path, old: str, new: str):
 @register_corruptor("G-ROSTER")
 def corrupt_roster(ctx):
     dst, bad = _copy_pack(ctx, "bad-roster")
-    (dst / "expectations.yaml").write_text("roster_count: 99\n")
+    (dst / "expectations.yaml").write_text("roster_count: 99\n", encoding="utf-8")
     return bad
 
 
@@ -102,5 +102,5 @@ def corrupt_override(ctx):
 @register_corruptor("G-KEY-UNIQUE")
 def corrupt_key(ctx):
     dst, bad = _copy_pack(ctx, "bad-key")
-    p = dst / "sources" / "products.csv"; p.write_text(p.read_text() + "RX-100,Dup,,Oval,1\n")
+    p = dst / "sources" / "products.csv"; p.write_text(p.read_text(encoding="utf-8") + "RX-100,Dup,,Oval,1\n")
     return bad

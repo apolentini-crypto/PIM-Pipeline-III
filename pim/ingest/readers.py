@@ -167,8 +167,11 @@ def read_xlsx(source: Source, path: Path) -> list[RawFrame]:
 def read_csv(source: Source, path: Path) -> list[RawFrame]:
     tmp = _temp_copy(path)
     try:
-        with tmp.open("r", encoding="utf-8-sig", newline="") as fh:
-            grid = [tuple(r) for r in csv.reader(fh)]
+        try:
+            with tmp.open("r", encoding=source.encoding, newline="") as fh:
+                grid = [tuple(r) for r in csv.reader(fh)]
+        except UnicodeDecodeError as e:
+            raise IngestError(f"{source.id}: {path.name} is not {source.encoding} (byte {e.object[e.start:e.start+1]!r} at offset {e.start}); declare the file's real encoding in sources.yaml (e.g. encoding: cp1252)")
         return [_frame_from_grid(source, None, grid)]
     finally:
         shutil.rmtree(tmp.parent, ignore_errors=True)
@@ -191,7 +194,7 @@ def _flatten(rec: dict, prefixes: list[str]) -> dict[str, str]:
 def read_json(source: Source, path: Path) -> list[RawFrame]:
     tmp = _temp_copy(path)
     try:
-        data = json.loads(tmp.read_text(encoding="utf-8"))
+        data = json.loads(tmp.read_text(encoding=source.encoding))
     finally:
         shutil.rmtree(tmp.parent, ignore_errors=True)
     if isinstance(data, dict):

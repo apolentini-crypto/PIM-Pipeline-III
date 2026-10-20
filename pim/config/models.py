@@ -79,6 +79,7 @@ class Source(Strict):
     multi: bool = Field(default=False, description="long format: many rows per key (e.g. one row per image); fields select with a `where`")
     flatten: list[str] = Field(default_factory=list, description="json: nested dict keys exposed as 'parent.child' columns")
     max_cols: Optional[int] = Field(default=None, ge=1, description="bound the read for sheets with phantom columns")
+    encoding: str = Field(default="utf-8-sig", description="csv/json text encoding, declared (e.g. cp1252 for a Windows-saved CSV)")
     typed_columns: dict[str, Literal["number", "date"]] = Field(default_factory=dict, description="FR-8: everything else is read as text")
 
     @model_validator(mode="after")

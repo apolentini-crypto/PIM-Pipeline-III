@@ -81,7 +81,7 @@ def test_rebuild_is_byte_identical(pack, tmp_path):
 def test_d7_alias_conflict_halts(pack, tmp_path):
     """D-7 / FR-20: primary and alias both populated and disagreeing beyond tolerance HALTS naming both."""
     p = pack / "sources" / "prices.csv"
-    p.write_text(p.read_text().replace("RX-100,100.50,133.5 mm", "RX-100,100.50,150 mm"))
+    p.write_text(p.read_text(encoding="utf-8").replace("RX-100,100.50,133.5 mm", "RX-100,100.50,150 mm"))
     with pytest.raises(HaltError) as ei:
         _build(pack, tmp_path)
     msg = str(ei.value)
@@ -91,14 +91,14 @@ def test_d7_alias_conflict_halts(pack, tmp_path):
 def test_different_units_are_not_compared(pack, tmp_path):
     """'6 in' vs '152.4 mm' is not a conflict: converting would invent a measurement (FR-132)."""
     p = pack / "sources" / "prices.csv"
-    p.write_text(p.read_text().replace("RX-100,100.50,133.5 mm", "RX-100,100.50,5.25 in"))
+    p.write_text(p.read_text(encoding="utf-8").replace("RX-100,100.50,133.5 mm", "RX-100,100.50,5.25 in"))
     r = _build(pack, tmp_path)
     assert r.rows["RX-100"].fields["length_mm"].value == "133.5"
 
 
 def test_unitless_measurement_not_adopted(pack, tmp_path):
     p = pack / "sources" / "products.csv"
-    p.write_text(p.read_text().replace("RX-101,Ergo Cutter 101,,", "RX-101,Ergo Cutter 101,120,"))
+    p.write_text(p.read_text(encoding="utf-8").replace("RX-101,Ergo Cutter 101,,", "RX-101,Ergo Cutter 101,120,"))
     r = _build(pack, tmp_path)
     # bare '120' in the primary is reported and skipped; the alias '120 mm' supplies the value
     assert r.rows["RX-101"].fields["length_mm"].prov.kind == "alias_cell"
@@ -107,7 +107,7 @@ def test_unitless_measurement_not_adopted(pack, tmp_path):
 
 def test_duplicate_key_in_source_halts(pack, tmp_path):
     p = pack / "sources" / "products.csv"
-    p.write_text(p.read_text() + "RX-100,Dup,,Oval,1\n")
+    p.write_text(p.read_text(encoding="utf-8") + "RX-100,Dup,,Oval,1\n")
     with pytest.raises(HaltError) as ei:
         _build(pack, tmp_path)
     assert "duplicate key" in str(ei.value) and "RX-100" in str(ei.value)
@@ -115,14 +115,14 @@ def test_duplicate_key_in_source_halts(pack, tmp_path):
 
 def test_required_field_missing_halts_naming_sku(pack, tmp_path):
     p = pack / "sources" / "products.csv"
-    p.write_text(p.read_text().replace("HS-200,Long Cutter 200", "HS-200,"))
+    p.write_text(p.read_text(encoding="utf-8").replace("HS-200,Long Cutter 200", "HS-200,"))
     with pytest.raises(HaltError) as ei:
         _build(pack, tmp_path)
     assert "G-REQUIRED" in str(ei.value) and "HS-200.name" in str(ei.value)
 
 
 def test_expectation_mismatch_halts(pack, tmp_path):
-    (pack / "expectations.yaml").write_text("roster_count: 5\n")
+    (pack / "expectations.yaml").write_text("roster_count: 5\n", encoding="utf-8")
     with pytest.raises(HaltError) as ei:
         _build(pack, tmp_path)
     assert "G-ROSTER" in str(ei.value) and "measured 4 expected 5" in str(ei.value)
@@ -130,12 +130,12 @@ def test_expectation_mismatch_halts(pack, tmp_path):
 
 def test_text_fix_is_declared_and_noted(pack, tmp_path):
     p = pack / "sources" / "products.csv"
-    p.write_text(p.read_text().replace("Tapered", "45º Tapered"))
+    p.write_text(p.read_text(encoding="utf-8").replace("Tapered", "45º Tapered"), encoding="utf-8")
     with pytest.raises(HaltError) as ei:            # without the declaration the gate halts
         _build(pack, tmp_path)
     assert "G-ENCODING" in str(ei.value)
     b = pack / "brand.yaml"
-    b.write_text(b.read_text() + 'text_fixes: { "º": "°" }\n')
+    b.write_text(b.read_text(encoding="utf-8") + 'text_fixes: { "º": "°" }\n', encoding="utf-8")
     r = _build(pack, tmp_path)
     assert r.rows["RX-101"].fields["head_type"].value == "45° Tapered"
     assert any("text fix" in n for n in r.notes)
@@ -177,8 +177,20 @@ def test_override_on_unknown_sku_or_field_halts(pack, tmp_path):
 def test_diff_two_builds(pack, tmp_path):
     a = _build(pack, tmp_path)
     p = pack / "sources" / "prices.csv"
-    p.write_text(p.read_text().replace("HS-200,110.00", "HS-200,115.00") + "NEW-1,5.00,\n")
+    p.write_text(p.read_text(encoding="utf-8").replace("HS-200,110.00", "HS-200,115.00") + "NEW-1,5.00,\n")
     b = _build(pack, tmp_path)
     d = diff_exports(read_export(a.export_path), read_export(b.export_path))
     assert d["counts"] == {"added": 0, "removed": 0, "changed_rows": 1, "changed_cells": 1, "unchanged_rows": 3}
     assert d["changed"]["HS-200"]["list_price"] == {"before": "110.00", "after": "115.00"}
+
+
+def test_csv_encoding_is_declared(pack, tmp_path):
+    """A Windows-saved (cp1252) CSV halts with a message naming the fix; declaring the encoding reads it."""
+    p = pack / "sources" / "products.csv"
+    p.write_bytes(p.read_text(encoding="utf-8").replace("Tapered", "45° Tapered").encode("cp1252"))
+    with pytest.raises(HaltError) as ei:
+        _build(pack, tmp_path)
+    assert "encoding: cp1252" in str(ei.value)
+    s = pack / "sources.yaml"
+    s.write_text(s.read_text(encoding="utf-8").replace("format: csv, key_column: \"Part Number\"", "format: csv, encoding: cp1252, key_column: \"Part Number\""), encoding="utf-8")
+    assert _build(pack, tmp_path).rows["RX-101"].fields["head_type"].value == "45° Tapered"
