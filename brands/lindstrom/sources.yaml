@@ -1,10 +1,31 @@
-# READ-ONLY copy of the masters (FR-10). Paths relative to source_root.
+# Lindström sources — READ-ONLY copy of the masters (FR-10). Ids follow CT-PIM-DATA-001 §1.
+# Headers are byte-exact (FR-111): misspellings like 'UNITLENGHT mm' and the trailing space in
+# 'Description ' are the vendor's and are declared as-is.
 source_root: "C:/Users/apole/OneDrive - Castletronics/Castletronics Shared/Business Folders/Brand Distribution/Lindstrom/2026/Data to Merge"
 sources:
-  - { id: S1, path: "Lindstrom 2026 - Merged Product Data and Price Book (FIXED).xlsx", format: xlsx, sheet: Hoja1, header_row: 1, key_column: PRODUCT }
+  # S1 — vendor PIM export with the price book pasted alongside: a declared two-block sheet (FR-12)
+  - id: S1
+    path: "Lindstrom 2026 - Merged Product Data and Price Book (FIXED).xlsx"
+    format: xlsx
+    sheet: Hoja1
+    header_row: 1
+    max_cols: 54
+    blocks:
+      - { id: pim,   key_column: PRODUCT,        col_from: 1,  col_to: 46 }
+      # the book block is ROW-ALIGNED with the PIM block and keyed on its PRODUCT column —
+      # 'Product Code' collides (15AGW twice) and is the wrong key (V1-ASM §1)
+      - { id: book,  key_column: PRODUCT,        col_from: 48, col_to: 54 }
+  # S2 — the roster: 322 categorised SKUs (the merge spine, V1-ASM §1)
   - { id: S2, path: "Lindstrom - Category Assignments.xlsx", format: xlsx, sheet: "Product Categories", header_row: 1, key_column: "Product (SKU)" }
-  - { id: S3, path: "scraper_output.json", format: json, key_column: product_code }
-  - { id: S4, path: "technical_details_matrix.csv", format: csv, key_column: Product }
-  - { id: S5, path: "Lindstrom Image Links - FULL 322.xlsx", format: xlsx, sheet: "Image & Doc Links", header_row: 1, key_column: "Product Number" }
-  - { id: S6, path: "Lindstrom - ESD Determination.xlsx", format: xlsx, sheet: "ESD Determination", header_row: 1, key_column: "Product" }
-  - { id: S7, path: "Lindstrom - Q80 - 2026 Price Book - 8-1-26.xlsx", format: xlsx, sheet: Sheet1, header_row: 1, key_column: Model, optional: true }
+  # S3 — vendor-site scrape; specs{} exposed as 'specs.<key>' columns
+  - { id: S3, path: "scraper_output.json", format: json, key_column: product_code, flatten: [specs] }
+  # S4 — the scrape's specs pivoted wide (312 rows: the 10 scrape-404 SKUs are absent)
+  - { id: S4, path: "technical_details_matrix.csv", format: csv, header_row: 1, key_column: product_code }
+  # S5 — long-format image/doc audit: one row per URL (multi), selected by URL Type
+  - { id: S5, path: "Lindstrom Image Links - FULL 322.xlsx", format: xlsx, sheet: "Image & Doc Links", header_row: 1, key_column: "Product Number", multi: true }
+  # S6 — ESD adjudication: an OPERATOR RULING artifact; key is the blank-headed first column
+  - { id: S6, path: "Lindstrom - ESD Determination.xlsx", format: xlsx, sheet: "ESD Determination", header_row: 1, key_index: 1 }
+  # S7 — 8-1-2026 price book: headers on row 2; speaks the compact code dialect (joins.yaml)
+  - { id: S7, path: "Lindstrom - Q80 - 2026 Price Book - 8-1-26.xlsx", format: xlsx, sheet: "Platinum - Q80", header_row: 2, key_column: "Product Code" }
+  # S8 — Listing Updates: change-management workbook; Review sheet carries live BC ids + the join seed
+  - { id: S8, path: "Listing Updates.xlsx", format: xlsx, sheet: Review, header_row: 1, key_column: mpn, optional: true }

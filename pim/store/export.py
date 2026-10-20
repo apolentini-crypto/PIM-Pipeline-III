@@ -1,0 +1,61 @@
+"""Canonical export — the diff surface (ADR-2, FR-39/41/42).
+
+rows.jsonl: one SKU per line, ascending; keys sorted at every level; all values text;
+no timestamps (those live in manifest.json only); LF; UTF-8 without BOM.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+
+def row_line(sku: str, fields: dict, held: str | None) -> str:
+    obj = {
+        "sku": sku,
+        "fields": {f: {"v": v, **({"u": u} if u else {}), "p": f"{pk}:{pr}"} for f, (v, u, pk, pr) in sorted(fields.items())},
+        "held": held or False,
+    }
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def write_export(out_dir: Path, rows: dict, held: dict[str, str], manifest: dict) -> tuple[Path, str]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    p = out_dir / "rows.jsonl"
+    text = "".join(row_line(s, rows[s], held.get(s)) + "\n" for s in sorted(rows))
+    p.write_bytes(text.encode("utf-8"))
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    (out_dir / "manifest.json").write_bytes((json.dumps({**manifest, "rows_sha256": digest}, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"))
+    return p, digest
+
+
+def read_export(path: Path) -> dict[str, dict]:
+    out = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            o = json.loads(line)
+            out[o["sku"]] = o
+    return out
+
+
+def diff_exports(a: dict[str, dict], b: dict[str, dict]) -> dict:
+    """FR-42: added, removed and changed rows, field by field. Compares values only (provenance may legitimately move)."""
+    added = sorted(set(b) - set(a))
+    removed = sorted(set(a) - set(b))
+    changed = {}
+    for sku in sorted(set(a) & set(b)):
+        fa, fb = a[sku]["fields"], b[sku]["fields"]
+        diffs = {}
+        for f in sorted(set(fa) | set(fb)):
+            va = fa.get(f, {}).get("v")
+            vb = fb.get(f, {}).get("v")
+            if va != vb:
+                diffs[f] = {"before": va, "after": vb}
+        if a[sku].get("held") != b[sku].get("held"):
+            diffs["_held"] = {"before": a[sku].get("held"), "after": b[sku].get("held")}
+        if diffs:
+            changed[sku] = diffs
+    n_cells = sum(len(d) for d in changed.values())
+    return {"added": added, "removed": removed, "changed": changed,
+            "counts": {"added": len(added), "removed": len(removed), "changed_rows": len(changed), "changed_cells": n_cells,
+                       "unchanged_rows": len(set(a) & set(b)) - len(changed)}}

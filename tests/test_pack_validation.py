@@ -7,7 +7,7 @@ from tests.conftest import FIXTURE_PACK
 def test_fixture_pack_is_valid():
     rep = validate_pack(FIXTURE_PACK)
     assert rep.ok, [str(e) for e in rep.errors]
-    assert len(rep.models) == 9  # 11 declared, expectations.yaml + thresholds.yaml absent in the fixture
+    assert len(rep.models) == 10  # 11 declared, thresholds.yaml absent in the fixture
 
 
 def test_missing_dir_is_an_error(tmp_path):

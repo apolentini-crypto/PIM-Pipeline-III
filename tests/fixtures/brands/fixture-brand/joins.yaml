@@ -1,4 +1,5 @@
 primary_source: S1
 key: { rule: trim-only }
+# association: from_source/from_key = the OTHER source's code; to_source/to_key = the roster key it belongs to
 associations:
-  - { from_source: S2, from_key: "TL 15A-GW", to_source: S1, to_key: "15AGWM", basis: "fixture: price book code differs from site code" }
+  - { from_source: S2, from_key: "15AGWM", to_source: S1, to_key: "TL 15A-GW", basis: "fixture: price book code differs from site code" }

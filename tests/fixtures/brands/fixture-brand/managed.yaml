@@ -1,4 +1,4 @@
 managed: all-mapped
 unmanaged: [inventory_level, is_visible]
 # owners are keyed by CANONICAL field name (FR-54..56)
-owners: { name: catalog, mpn: catalog, list_price: catalog, filter_metadata: catalog }
+owners: { name: catalog, mpn: catalog, list_price: catalog, filter_metadata: catalog, ean: catalog }

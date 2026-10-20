@@ -2,6 +2,6 @@ endpoints:
   bc:
     adapter: bigcommerce
     environments: [sandbox]
-    field_map: { name: name, mpn: sku, list_price: price }
+    field_map: { name: name, mpn: sku, list_price: price, ean: gtin }
     custom_fields: [filter_metadata]
     sentinel_empty_fields: [related_products]

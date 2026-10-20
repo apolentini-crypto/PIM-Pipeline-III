@@ -1,6 +1,7 @@
 fields:
   mpn:        { primary: { source: S1, column: "Part Number" }, confirmed: "Y", required: true }
   name:       { primary: { source: S1, column: "Title" }, confirmed: "Y", required: true }
-  length_mm:  { primary: { source: S1, column: "Length" }, aliases: [{ source: S2, column: "Total length" }], unit: { parse: in-value, expect: [mm, in] }, type: number }
+  ean:        { primary: { source: S1, column: "EAN" }, confirmed: "Y" }
+  length_mm:  { primary: { source: S1, column: "Length" }, aliases: [{ source: S2, column: "Total length" }], unit: { parse: in-value, expect: [mm, in] }, alias_tolerance: "2%", type: number }
   list_price: { primary: { source: S2, column: "2026 List" }, type: number, confirmed: "Y" }
   head_type:  { primary: { source: S1, column: "Head Type" } }

@@ -16,6 +16,7 @@ def good_ctx(tmp_path, store):
     """The GOOD context every check must pass on."""
     return {
         "pack_dir": str(FIXTURE_PACK),
+        "var_dir": str(tmp_path / "var"),
         "tmp": str(tmp_path),
         "store": store,
         "skus": ["2.53131A", "2.53131A.M", "2.53131A.1", "2.53131A-U.1", "2.53131A.P3",

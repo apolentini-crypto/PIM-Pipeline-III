@@ -1,4 +1,578 @@
-primary_source: S2            # Category Assignments: 322 rows, every one categorised (contract §5 #2)
-key: { rule: trim-only }      # never alter a key's interior: 'TL 15A-GW' ≠ 'TL 15AGW' (FR-15..17)
+# Lindström joins. Roster = S2 (322 categorised SKUs). Keys are trimmed and NEVER altered inside:
+# 'TL 15A-GW' ≠ 'TL 15AGW' are two real products (V1-ASM §1). The association table maps the price
+# book's compact codes (S7 'Product Code') to roster MPNs; it was generated from Listing Updates.xlsx
+# Review sheet (join ∈ {tl, hs}) and is DATA: edit here, never in code (FR-16).
+primary_source: S2
+key:
+  rule: trim-only
 associations:
-  - { from_source: S7, from_key: "15AGWM", to_source: S2, to_key: "TL 15A-GW", basis: "gen-1 FR-16 rationale: price-book code vs site code; 2026-08-17 rulings" }
+- from_source: S7
+  from_key: HS8147
+  to_source: S2
+  to_key: '8147'
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7280'
+  to_source: S2
+  to_key: HS-7280
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7285'
+  to_source: S2
+  to_key: HS-7285
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7290'
+  to_source: S2
+  to_key: HS-7290
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7590'
+  to_source: S2
+  to_key: HS-7590
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7891'
+  to_source: S2
+  to_key: HS-7891
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '8132'
+  to_source: S2
+  to_key: HS-8132
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '8133'
+  to_source: S2
+  to_key: HS-8133
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '8137'
+  to_source: S2
+  to_key: HS-8137
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '8138'
+  to_source: S2
+  to_key: HS-8138
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '8163'
+  to_source: S2
+  to_key: HS-8163
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: '7490'
+  to_source: S2
+  to_key: HS7490
+  basis: Listing Updates.xlsx Review sheet, join=hs (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00-SA
+  to_source: S2
+  to_key: TL 00-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00-SA-ET
+  to_source: S2
+  to_key: TL 00-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00-SA-FT
+  to_source: S2
+  to_key: TL 00-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00-SA-SL
+  to_source: S2
+  to_key: TL 00-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 000-SA
+  to_source: S2
+  to_key: TL 000-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00-ACF
+  to_source: S2
+  to_key: TL 00ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00B-SA
+  to_source: S2
+  to_key: TL 00B-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00CFR-SA
+  to_source: S2
+  to_key: TL 00CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 00D-SA
+  to_source: S2
+  to_key: TL 00D-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 0C9-SA
+  to_source: S2
+  to_key: TL 0C9-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 1-SA
+  to_source: S2
+  to_key: TL 1-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 1-SA-SL
+  to_source: S2
+  to_key: TL 1-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 124-SA
+  to_source: S2
+  to_key: TL 124-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 14A-GW
+  to_source: S2
+  to_key: TL 14A-GW
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 15A-C
+  to_source: S2
+  to_key: TL 15A-C
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 15AGW
+  to_source: S2
+  to_key: TL 15A-GW
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 15A-RW
+  to_source: S2
+  to_key: TL 15A-RW
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 15AGW
+  to_source: S2
+  to_key: TL 15AGW
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 15AGWHM-SA
+  to_source: S2
+  to_key: TL 15AGWHM-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2-SA-SL
+  to_source: S2
+  to_key: TL 2-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 242ACF
+  to_source: S2
+  to_key: TL 242ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 242CFR-SA
+  to_source: S2
+  to_key: TL 242CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 249-ACF
+  to_source: S2
+  to_key: TL 249 ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 249CFR-SA
+  to_source: S2
+  to_key: TL 249CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259-ACF
+  to_source: S2
+  to_key: TL 259 ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259CFR-SA
+  to_source: S2
+  to_key: TL 259 CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259ACP
+  to_source: S2
+  to_key: TL 259ACP
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259ASV
+  to_source: S2
+  to_key: TL 259ASV
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259CPR-SA
+  to_source: S2
+  to_key: TL 259CPR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 259SVR-SA
+  to_source: S2
+  to_key: TL 259SVR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-ACF
+  to_source: S2
+  to_key: TL 2A ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-SA
+  to_source: S2
+  to_key: TL 2A-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-SA-ET
+  to_source: S2
+  to_key: TL 2A-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-SA-FT
+  to_source: S2
+  to_key: TL 2A-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-SA-SL
+  to_source: S2
+  to_key: TL 2A-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2A-SA-TC
+  to_source: S2
+  to_key: TL 2A-SA-TC
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 2ACFR-SA
+  to_source: S2
+  to_key: TL 2ACFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3-SA
+  to_source: S2
+  to_key: TL 3-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3-SA-ET
+  to_source: S2
+  to_key: TL 3-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3-SA-FT
+  to_source: S2
+  to_key: TL 3-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3-SA-SL
+  to_source: S2
+  to_key: TL 3-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 31-SA
+  to_source: S2
+  to_key: TL 31-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 34A-SA
+  to_source: S2
+  to_key: TL 34A-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3C-SA
+  to_source: S2
+  to_key: TL 3C-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3C-SA-ET
+  to_source: S2
+  to_key: TL 3C-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3C-SA-FT
+  to_source: S2
+  to_key: TL 3C-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 3C-SA-SL
+  to_source: S2
+  to_key: TL 3C-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 4-SA-SL
+  to_source: S2
+  to_key: TL 4-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 475-SA
+  to_source: S2
+  to_key: TL 475-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5-SA
+  to_source: S2
+  to_key: TL 5-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5-SA-ET
+  to_source: S2
+  to_key: TL 5-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5-SA-FT
+  to_source: S2
+  to_key: TL 5-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5-SA-SL
+  to_source: S2
+  to_key: TL 5-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 51S-SA
+  to_source: S2
+  to_key: TL 51S-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 578-SA
+  to_source: S2
+  to_key: TL 578-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 582-SA
+  to_source: S2
+  to_key: TL 582-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5A-SA-SL
+  to_source: S2
+  to_key: TL 5A-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5-ACF
+  to_source: S2
+  to_key: TL 5ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5ASV
+  to_source: S2
+  to_key: TL 5ASV
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5AX-SA
+  to_source: S2
+  to_key: TL 5AX-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5B-SA
+  to_source: S2
+  to_key: TL 5B-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5CF-SA
+  to_source: S2
+  to_key: TL 5CF-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5CFR-SA
+  to_source: S2
+  to_key: TL 5CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5CPR-SA
+  to_source: S2
+  to_key: TL 5CPR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 5SVR-SA
+  to_source: S2
+  to_key: TL 5SVR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 6-SA
+  to_source: S2
+  to_key: TL 6-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 648-SA
+  to_source: S2
+  to_key: TL 648-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 649-SA
+  to_source: S2
+  to_key: TL 649-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 65A-SA
+  to_source: S2
+  to_key: TL 65A-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7-SA
+  to_source: S2
+  to_key: TL 7-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7-SA-ET
+  to_source: S2
+  to_key: TL 7-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7-SA-FT
+  to_source: S2
+  to_key: TL 7-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7-SA-SL
+  to_source: S2
+  to_key: TL 7-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7A-SA-ET
+  to_source: S2
+  to_key: TL 7A-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7A-SA-SL
+  to_source: S2
+  to_key: TL 7A-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7-ACF
+  to_source: S2
+  to_key: TL 7ACF
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7ACP
+  to_source: S2
+  to_key: TL 7ACP
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7ASV
+  to_source: S2
+  to_key: TL 7ASV
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7CFR-SA
+  to_source: S2
+  to_key: TL 7CFR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7CPR-SA
+  to_source: S2
+  to_key: TL 7CPR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: 7SVR-SA
+  to_source: S2
+  to_key: TL 7SVR-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: AA-SA
+  to_source: S2
+  to_key: TL AA-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: AA-SA-ET
+  to_source: S2
+  to_key: TL AA-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: AA-SA-FT
+  to_source: S2
+  to_key: TL AA-SA-FT
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: AA-SA-SL
+  to_source: S2
+  to_key: TL AA-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: AC-SA-SL
+  to_source: S2
+  to_key: TL AC-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: M-OOD-SA
+  to_source: S2
+  to_key: TL M-OOD-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: MM-SA-SL
+  to_source: S2
+  to_key: TL MM-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM103-SA
+  to_source: S2
+  to_key: TL SM 103-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM104-SA
+  to_source: S2
+  to_key: TL SM 104-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM105-SA
+  to_source: S2
+  to_key: TL SM 105-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM107-SA
+  to_source: S2
+  to_key: TL SM 107-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM108-SA
+  to_source: S2
+  to_key: TL SM 108-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM109-SA
+  to_source: S2
+  to_key: TL SM 109-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM110-SA
+  to_source: S2
+  to_key: TL SM 110-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM115-SA
+  to_source: S2
+  to_key: TL SM 115-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM117-SA
+  to_source: S2
+  to_key: TL SM 117-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM106-SA
+  to_source: S2
+  to_key: TL SM106-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM116-SA
+  to_source: S2
+  to_key: TL SM116-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SM116-SA-ET
+  to_source: S2
+  to_key: TL SM116-SA-ET
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SS-SA
+  to_source: S2
+  to_key: TL SS-SA
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)
+- from_source: S7
+  from_key: SS-SA-SL
+  to_source: S2
+  to_key: TL SS-SA-SL
+  basis: Listing Updates.xlsx Review sheet, join=tl (price run 2026-08; operator-reviewed)

@@ -1,8 +1,70 @@
-# M0 stub — the full ~70-field map is authored in M1 from LINDSTROM-BC-FIELD-MAPPING.xlsx.
+# Lindström canonical fields — M1 set (identity, classification, content, logistics, price book,
+# ESD ruling, the spec backbone with alias chains). Grows in M2 with the remaining spec columns.
+# primary ELSE aliases (FR-18); populated+disagreeing primary/alias HALTS (D-7).
 fields:
-  mpn:         { primary: { source: S2, column: "Product (SKU)" }, confirmed: "Y", required: true }
-  name:        { primary: { source: S1, column: "en_US#SHORT DESCRIPTION P" }, confirmed: "Y", required: true }
-  category_l2: { primary: { source: S2, column: "Category (L2)" }, required: true }
-  ean:         { primary: { source: S1, column: "EAN CODE" }, confirmed: "Y" }
-  list_price:  { primary: { source: S1, column: "2026 List Price" }, type: number, confirmed: "Y" }
-  weight_kg:   { primary: { source: S1, column: "UNITWEIGHT kg" }, type: number, unit: { parse: declared, unit: kg }, confirmed: "Y" }
+  # --- identity / classification
+  mpn:            { primary: { source: S2, column: "Product (SKU)" }, confirmed: "Y", required: true }
+  vendor_brand:   { primary: { source: S1, block: pim, column: "en_US#BRAND" } }
+  ean:            { primary: { source: S1, block: pim, column: "EAN CODE" }, confirmed: "Y" }
+  ean_box:        { primary: { source: S1, block: pim, column: "EAN BOX CODE" } }
+  product_block:  { primary: { source: S1, block: pim, column: "PRODUCT BLOCK" } }
+  category_l2:    { primary: { source: S2, column: "Category (L2)" }, required: true }
+  section_l3:     { primary: { source: S2, column: "Section (L3)" }, required: true }
+  category_path:  { primary: { source: S2, column: "Full Path" } }
+  vendor_chapter: { primary: { source: S1, block: pim, column: "en_US#CHAPTER" } }
+  vendor_section: { primary: { source: S1, block: pim, column: "en_US#SECTION" } }
+  vendor_group:   { primary: { source: S1, block: pim, column: "en_US#GROUP" } }
+  # --- content (title: S1 ELSE scrape — the 10 scrape-404 SKUs have only S1)
+  name:             { primary: { source: S1, block: pim, column: "en_US#SHORT DESCRIPTION P" }, aliases: [{ source: S3, column: product_name }], confirmed: "Y", required: true }
+  name_alt:         { primary: { source: S1, block: pim, column: "en_US#SHORT DESCRIPTION PB" } }
+  details_pipes:    { primary: { source: S1, block: pim, column: "en_US#PRODUCT DETAILS" } }
+  description_html: { primary: { source: S3, column: description_html }, type: html, confirmed: "Y" }
+  meta_description: { primary: { source: S3, column: meta_description }, confirmed: "Y" }
+  website_url:      { primary: { source: S1, block: pim, column: "en_US#PRODUCT WEBSITE URL" }, type: url }
+  datasheet_url:    { primary: { source: S1, block: pim, column: "en_US#PRODUCT  WEBSITE PDF URL" }, type: url }
+  youtube_url:      { primary: { source: S1, block: pim, column: "YOU TUBE LINK" }, type: url }
+  scrape_status:    { primary: { source: S3, column: scrape_status } }
+  # --- customs (A1 FR-164)
+  country_of_origin_code: { primary: { source: S1, block: pim, column: "COUNTRY OF ORIGIN CODE" } }
+  country_of_origin_name: { primary: { source: S1, block: pim, column: "COUNTRY OF ORIGIN NAME" } }
+  hs_code_raw:            { primary: { source: S1, block: pim, column: "STANOCU" }, aliases: [{ source: S1, block: pim, column: "CUSTOM STATISTICAL NO" }] }
+  # --- logistics: UNIT* is the sellable item; PACK* is the master carton (never divided — FINDINGS §14)
+  package_qty:     { primary: { source: S1, block: pim, column: "PACKAGE QTY" }, type: integer }
+  unit_weight_kg:  { primary: { source: S1, block: pim, column: "UNITWEIGHT kg" }, type: number, unit: { parse: declared, unit: kg } }
+  unit_height_mm:  { primary: { source: S1, block: pim, column: "UNITHEIGHT mm" }, type: number, unit: { parse: declared, unit: mm } }
+  unit_length_mm:  { primary: { source: S1, block: pim, column: "UNITLENGHT mm" }, type: number, unit: { parse: declared, unit: mm } }
+  unit_width_mm:   { primary: { source: S1, block: pim, column: "UNITWIDT mm" }, type: number, unit: { parse: declared, unit: mm } }
+  pack_weight:     { primary: { source: S1, block: pim, column: "PACKWEIGHT" }, unit: { parse: in-value, expect: [kg, g] } }
+  # --- price book (8-1-2026 book is the price authority, not the PIM's 2026 List Price — V1-ASM §1)
+  book_list_price:   { primary: { source: S7, column: "8-1-2026 List Price" }, type: number, confirmed: "Y" }
+  book_net_price:    { primary: { source: S7, column: "Q80 - Platinum Net Price" }, type: number, confirmed: "Y" }
+  book_discount:     { primary: { source: S7, column: "Q80 - Platinum Discount" }, type: number }
+  book_weight_lbs:   { primary: { source: S7, column: "Weight (LBS)" }, type: number, unit: { parse: declared, unit: lb } }
+  future_discontinued: { primary: { source: S7, column: "Future Discontinued" } }
+  pim_list_price_2026: { primary: { source: S1, block: book, column: "2026 List Price" }, type: number }
+  # --- ESD: a ruling, never re-derived (FR-131); from S6 only
+  esd_safe:    { primary: { source: S6, column: "ESD Safe" }, confirmed: "Y", required: true }
+  esd_source:  { primary: { source: S6, column: "ESD Source" } }
+  # --- live store identity (from the Review sheet; becomes remote_ids at migration, FR-108)
+  bc_product_id_live: { primary: { source: S8, column: bc_product_id } }
+  bc_sku_live:        { primary: { source: S8, column: bc_sku } }
+  # --- spec backbone (S3 specs ELSE S4 matrix); units parsed from inside the value (FR-21)
+  head_type:       { primary: { source: S3, column: "specs.Head Type" }, aliases: [{ source: S4, column: "Head Type" }] }
+  head_size:       { primary: { source: S3, column: "specs.Head Size" }, aliases: [{ source: S4, column: "Head Size" }] }
+  cut_result:      { primary: { source: S3, column: "specs.Bevel / Cut Result" }, aliases: [{ source: S4, column: "Bevel / Cut Result" }] }
+  capacity_mm:     { primary: { source: S3, column: "specs.Cutting Capacity (mm)", unit: mm }, aliases: [{ source: S4, column: "Cutting Capacity (mm)", unit: mm }, { source: S4, column: "Cutting Capacity Soft Wire (mm)", unit: mm }], unit: { parse: in-value, expect: [mm] } }
+  capacity_in:     { primary: { source: S3, column: "specs.Cutting Capacity (in)", unit: in }, aliases: [{ source: S4, column: "Cutting Capacity (in)", unit: in }], unit: { parse: in-value, expect: [in] } }
+  length_mm:       { primary: { source: S3, column: "specs.Length (mm)", unit: mm }, aliases: [{ source: S4, column: "Length (mm)", unit: mm }, { source: S4, column: "Length" }, { source: S4, column: "Total length" }, { source: S4, column: "Total Length" }], unit: { parse: in-value, expect: [mm, in] }, alias_tolerance: "2%" }
+  length_in:       { primary: { source: S3, column: "specs.Lenght (in)", unit: in }, aliases: [{ source: S4, column: "Lenght (in)", unit: in }, { source: S4, column: "Length (in)", unit: in }], unit: { parse: in-value, expect: [in] }, alias_tolerance: "2%" }
+  head_height_mm:  { primary: { source: S3, column: "specs.Head Height (mm)", unit: mm }, aliases: [{ source: S4, column: "Head Height (mm)", unit: mm }], unit: { parse: in-value, expect: [mm] } }
+  head_width_mm:   { primary: { source: S3, column: "specs.Head Width (mm)", unit: mm }, aliases: [{ source: S4, column: "Head Width (mm)", unit: mm }], unit: { parse: in-value, expect: [mm] } }
+  head_thickness_mm: { primary: { source: S3, column: "specs.Head Thickness (mm)", unit: mm }, aliases: [{ source: S4, column: "Head Thickness (mm)", unit: mm }], unit: { parse: in-value, expect: [mm] } }
+  tip_width_mm:    { primary: { source: S3, column: "specs.Tip Width (mm)", unit: mm }, aliases: [{ source: S4, column: "Tip Width (mm)", unit: mm }, { source: S4, column: "Tip Width, mm", unit: mm }, { source: S4, column: "Tip Width" }], unit: { parse: in-value, expect: [mm], decimal_comma: true }, alias_tolerance: "2%" }
+  tip_width_in:    { primary: { source: S3, column: "specs.Tip Width (in)", unit: in }, aliases: [{ source: S4, column: "Tip Width (in)", unit: in }, { source: S4, column: "Tip Width" }], unit: { parse: in-value, expect: [in], decimal_comma: true }, alias_tolerance: "2%" }
+  tip_thickness_mm: { primary: { source: S3, column: "specs.Tip thickness, mm", unit: mm }, aliases: [{ source: S4, column: "Tip thickness, mm", unit: mm }], unit: { parse: in-value, expect: [mm], decimal_comma: true } }
+  jaw_surface:     { primary: { source: S3, column: "specs.Jaw Surface" }, aliases: [{ source: S4, column: "Jaw Surface" }] }
+  pincet_shape:    { primary: { source: S3, column: "specs.Pincet shape" }, aliases: [{ source: S4, column: "Pincet shape" }] }
+  spec_weight:     { primary: { source: S3, column: "specs.Weight" }, aliases: [{ source: S4, column: "Weight (g)", unit: g }, { source: S4, column: "Weight (oz)", unit: oz }, { source: S4, column: "Weight (Kg)", unit: kg }], unit: { parse: in-value, expect: [g, oz, kg, lb] } }
+  resistivity:     { primary: { source: S3, column: "specs.Resistivity" }, aliases: [{ source: S4, column: "Resistivity" }] }
+  # --- images: main image from the long-format audit (selected by URL Type)
+  image_main_url:  { primary: { source: S5, column: "URL (Link)", where: { "URL Type": "PRODUCT IMAGE NAME" } }, type: url }

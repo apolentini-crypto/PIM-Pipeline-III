@@ -39,6 +39,7 @@ class Brand(Strict):
     bc_brand_name: str = Field(description="exact brand name as it exists in BigCommerce; resolved to an id at run time")
     brand_id: Optional[int] = Field(default=None, description="BigCommerce brand id = SKU prefix. None until the brand exists in BC.")
     mpn_normalisation: MpnNormalisation = Field(default_factory=MpnNormalisation)
+    text_fixes: dict[str, str] = Field(default_factory=dict, description="FR-24/132: declared codepoint corrections applied to every text value, e.g. {'º': '°'}; each application is noted")
     environments: dict[str, Environment] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -52,8 +53,17 @@ class Brand(Strict):
 class Block(Strict):
     """One keyed block inside a sheet (FR-12). Columns are exact header text (FR-111)."""
     id: str
-    key_column: str
-    columns: Optional[list[str]] = Field(default=None, description="restrict to these headers; None = all")
+    key_column: Optional[str] = None
+    key_index: Optional[int] = Field(default=None, ge=1, description="1-based column index of the key when its header is blank")
+    col_from: Optional[int] = Field(default=None, ge=1, description="1-based first column of the block")
+    col_to: Optional[int] = Field(default=None, ge=1, description="1-based last column of the block (inclusive)")
+    columns: Optional[list[str]] = Field(default=None, description="restrict to these headers; None = all in range")
+
+    @model_validator(mode="after")
+    def _key(self):
+        if not self.key_column and not self.key_index:
+            raise ValueError(f"block {self.id!r}: declare key_column or key_index")
+        return self
 
 
 class Source(Strict):
@@ -62,15 +72,19 @@ class Source(Strict):
     format: Literal["xlsx", "xlsm", "csv", "json"]
     sheet: Optional[str] = None
     header_row: int = Field(default=1, ge=1, description="1-based row holding the headers")
-    key_column: Optional[str] = Field(default=None, description="exact header of the join key; required unless blocks are declared")
+    key_column: Optional[str] = Field(default=None, description="exact header of the join key; required unless blocks or key_index are declared")
+    key_index: Optional[int] = Field(default=None, ge=1, description="1-based column index of the key when its header is blank")
     blocks: list[Block] = Field(default_factory=list)
     optional: bool = Field(default=False, description="FR-13: proceed with a recorded warning when absent")
+    multi: bool = Field(default=False, description="long format: many rows per key (e.g. one row per image); fields select with a `where`")
+    flatten: list[str] = Field(default_factory=list, description="json: nested dict keys exposed as 'parent.child' columns")
+    max_cols: Optional[int] = Field(default=None, ge=1, description="bound the read for sheets with phantom columns")
     typed_columns: dict[str, Literal["number", "date"]] = Field(default_factory=dict, description="FR-8: everything else is read as text")
 
     @model_validator(mode="after")
     def _key_or_blocks(self):
-        if not self.key_column and not self.blocks:
-            raise ValueError(f"source {self.id!r}: declare key_column or at least one block")
+        if not self.key_column and not self.key_index and not self.blocks:
+            raise ValueError(f"source {self.id!r}: declare key_column, key_index or at least one block")
         if self.format in ("xlsx", "xlsm") and not self.sheet and not self.blocks:
             raise ValueError(f"source {self.id!r}: xlsx/xlsm sources must name a sheet (readers are declared, not sniffed — FR-7)")
         return self
@@ -96,7 +110,8 @@ class KeyRule(Strict):
 
 
 class Association(Strict):
-    """FR-16: explicit code→code mapping between two sources. Always wins over computed matches."""
+    """FR-16: explicit code→code mapping. from_* = the other source and ITS code; to_* = the primary
+    source and the roster key that code belongs to. Always wins over computed matches."""
     from_source: str
     from_key: str
     to_source: str
@@ -114,6 +129,9 @@ class Joins(Strict):
 class ColumnRef(Strict):
     source: str
     column: str = Field(description="exact header text, byte-for-byte (FR-111)")
+    block: Optional[str] = Field(default=None, description="block id when the source declares blocks")
+    where: Optional[dict[str, str]] = Field(default=None, description="multi sources: pick the row whose columns equal these values")
+    unit: Optional[str] = Field(default=None, description="unit the COLUMN HEADER carries (e.g. 'Length (mm)' -> mm), used when a value is a bare number; a unit inside the value still wins")
 
 
 class UnitSpec(Strict):
@@ -315,6 +333,25 @@ class Pricing(Strict):
     margin_floor_pct: Optional[float] = Field(default=None, description="FR-157: flag (never refuse) rows below this margin")
     unpriced_means: Literal["hold", "price-hidden"] = Field(default="hold", description="FR-156: explicit meaning of 'no price'")
     fulfillment_vocabulary: list[str] = Field(default_factory=lambda: ["stock", "factory-order"], description="FR-160")
+
+
+# --------------------------------------------------------------------------- overrides/*.yaml (FR-25/26)
+class OverrideBasis(Strict):
+    who: str
+    when: str
+    why: str
+
+
+class Override(Strict):
+    sku: str = Field(description="roster key (vendor MPN) the override applies to")
+    field: str
+    before: Optional[str] = Field(default=None, description="FR-25: the value the build produced when this override was written; None = field was empty")
+    after: Optional[str] = Field(default=None, description="None = clear the field")
+    basis: OverrideBasis
+
+
+class OverrideFile(Strict):
+    overrides: list[Override] = Field(default_factory=list)
 
 
 # --------------------------------------------------------------------------- the whole pack

@@ -5,6 +5,8 @@ display_name: Lindström
 bc_brand_name: Lindström
 brand_id: 59
 mpn_normalisation: { upper: true, strip_whitespace: true, replace: { ".": "-" }, allowed: "A-Z0-9_-", trim: "-_" }
+# FR-24: the vendor types U+00BA (masculine ordinal) where U+00B0 (degree) is meant — 8 cells measured 2026-10-19
+text_fixes: { "º": "°" }
 environments:
   sandbox: { kind: sandbox, store_hash_env: BC_SANDBOX_STORE_HASH, token_env: BC_SANDBOX_ACCESS_TOKEN }
   live:    { kind: live,    store_hash_env: BC_STORE_HASH,         token_env: BC_ACCESS_TOKEN }
