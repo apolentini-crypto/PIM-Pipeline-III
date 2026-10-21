@@ -21,6 +21,8 @@ import yaml
 from pim.config.loader import validate_pack
 from pim.ingest.readers import cell_text
 
+import datetime as _dt
+STARTED = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 REPO = Path(__file__).resolve().parents[2]
 BRANDS = REPO / "brands"
 STATIC = Path(__file__).resolve().parent / "static"
@@ -477,7 +479,8 @@ class Handler(BaseHTTPRequestHandler):
             data = (STATIC / "app.html").read_bytes()
             self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
         elif path == "/api/brands":
-            self._json({"brands": sorted(p.name for p in BRANDS.iterdir() if p.is_dir()) if BRANDS.exists() else [], "repo": str(REPO)})
+            from pim import __version__
+            self._json({"brands": sorted(p.name for p in BRANDS.iterdir() if p.is_dir()) if BRANDS.exists() else [], "repo": str(REPO), "version": __version__, "started": STARTED})
         else:
             self._json({"error": "not found"}, 404)
 

@@ -61,7 +61,10 @@ def _pydantic_errors(file: str, exc: ValidationError) -> list[PackError]:
     out = []
     for e in exc.errors():
         loc = ".".join(str(x) for x in e["loc"]) or "<root>"
-        out.append(PackError(file, loc, e["msg"]))
+        msg = e["msg"]
+        if e.get("type") == "extra_forbidden":
+            msg = f"unknown key {loc!r} — either a typo, or this file was written for a newer version of the tool than the one running (if you just updated the code, close and restart the PIM window)"
+        out.append(PackError(file, loc, msg))
     return out
 
 

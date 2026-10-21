@@ -398,7 +398,7 @@ $("#buildBtn").onclick = async () => {
 };
 
 // ---- load existing
-async function loadBrands(){ const r=await api("/api/brands"); $("#repo").textContent=r.repo; $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
+async function loadBrands(){ const r=await api("/api/brands"); $("#repo").textContent=`${r.repo} · v${r.version} · window started ${r.started} (restart PIM.bat after updating the code)`; $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
 function resetState(){
   Object.assign(state, { brand:{slug:"",display_name:"",bc_brand_name:"",brand_id:"",source_root:"",text_fixes:{}}, sources:[], fields:[], joins:{primary_source:"",key_rule:"trim-only",associations:[]}, expectations:{roster_count:""} });
   files=[]; current=null; inspectCache={};
