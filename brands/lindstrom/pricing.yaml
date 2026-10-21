@@ -1,3 +1,7 @@
+# Operator ruling 2026-10-20: every Lindström item is purchased as EACH. The vendor's
+# PACKAGE QTY column is the factory's inbound packaging and is never used — not for cost,
+# not for weight, not for derivatives. Book net = cost per each; book list = price per each.
+purchase_unit: each
 rules:
   - { scope: default, basis: msrp-passthrough, basis_note: "gen-1: price = retail_price = 2026 List Price" }
 unpriced_means: price-hidden      # 2026-07-22 ruling: price 0 + is_price_hidden + availability disabled

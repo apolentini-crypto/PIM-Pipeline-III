@@ -104,6 +104,15 @@ Stage 5 are untouched by this amendment.
   > *Rationale: the standing rule "never divide a PACK figure by a quantity" (gen-1 FINDINGS
   > §14) — a 10-pack carton measures ~14 units by volume and the quantity column was once
   > flattened to 1. Carton dimensions never divide; only declared per-unit quantities multiply.*
+  > *Operator ruling 2026-10-20 (Lindström spatulas, PACKAGE QTY = 1000): "those are package
+  > quantities that the factory purchases (inbound to factory). All items are purchased by
+  > distributors as each." ⇒ the pack declares `purchase_unit: each` (the default); vendor pack
+  > columns are never read for arithmetic; a derivative of qty N costs N × cost-per-each.*
+- **FR-144a [ADDED 2026-10-20]** A derivative may also be a **kit**: a declared list of
+  components `(MPN, qty)` under an **operator-assigned MPN** (SKU `{brand}.{kit-mpn}`, no
+  `.P` ending). Cost and weight are the sums of the components' per-each values; name,
+  description, dimensions and images are operator-supplied or inherited from the first
+  component by declaration. *Example: `59.MS-KIT5` = MSEF + MSF×2 + MSM + MSL.*
 - **FR-147** A derivative's **physical dimensions** shall be operator-supplied or omitted;
   the system shall never compute them from the parent's.
 - **FR-148** A derivative whose parent is not in state `derivatives-only` or

@@ -321,7 +321,7 @@ class PricingRule(Strict):
     basis_note: str = Field(default="", description="who/when/why")
 
     @model_validator(mode="after")
-    def _factor_needed(self):
+    def _factor_needed(self):  # noqa: D401
         if self.basis != "msrp-passthrough" and self.factor is None:
             raise ValueError(f"pricing rule scope={self.scope} basis={self.basis}: factor is required")
         if self.scope in ("category", "derivative", "row") and not self.scope_value:
@@ -330,6 +330,8 @@ class PricingRule(Strict):
 
 
 class Pricing(Strict):
+    purchase_unit: Literal["each", "case"] = Field(default="each", description="A1 FR-146: 'each' = cost/price/weight are per unit; 'case' requires case_qty_field naming the per-case count column")
+    case_qty_field: Optional[str] = Field(default=None, description="only when purchase_unit=case: canonical field holding units per case")
     rules: list[PricingRule] = Field(default_factory=list)
     margin_floor_pct: Optional[float] = Field(default=None, description="FR-157: flag (never refuse) rows below this margin")
     unpriced_means: Literal["hold", "price-hidden"] = Field(default="hold", description="FR-156: explicit meaning of 'no price'")
