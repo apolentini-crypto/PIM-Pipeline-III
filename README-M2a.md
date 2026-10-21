@@ -14,16 +14,29 @@ python -m pim.cli.main build lindstrom
 ```
 Or in the window: **4 Decide → Export decision sheet → edit in Excel → Preview → Apply → 3 Build**.
 
-## The decision sheet (edit the first nine columns; "—" columns are context)
+## The decision sheet — one row per CT SKU (A1 FR-171a/b/c, 2026-10-20)
+
+Rows: every vendor part number (even `undecided`/`skip`, so it can be decided), each pack directly under its
+parent (key `MSF.P5`), kits at the end. Edit the columns **without** a "—" prefix; "—" columns are context and
+are ignored on import. `mpn` is the key — never change it.
 
 | column | values | effect |
 |---|---|---|
-| `carry_state` | `undecided` (default, never published) · `carry` · `skip` · `derivatives-only` · `carry+derivatives` | which catalog rows exist |
-| `hold_reason` | free text | carried but withheld from publishing, with the reason |
-| `fulfillment` | from `pricing.yaml → fulfillment_vocabulary` (`stock`, `factory-order`) | the store's inventory mode, later |
-| `initial_qty` | number | starting stock, written on create only |
-| `price` | number | a hand-set price; beats every rule |
-| `who` `when` `why` | basis | filled in on Apply if blank |
+| `carry_state` | `undecided` · `carry` · `skip` · `derivatives-only` · `carry+derivatives` (a pack/kit row: `carry` or `skip` only) | which catalog rows exist |
+| `hold_reason` | free text | carried but withheld from publishing; a pack/kit's own hold beats the parent's |
+| `fulfillment` | from `pricing.yaml → fulfillment_vocabulary` | checked on import |
+| `initial_qty` | whole number ≥ 0 | starting stock, written on create only |
+| `price` | money (`99`, `99.95`, `$1,234.5` all accepted → stored `1234.50`) | hand-set price; beats every rule, on packs and kits too |
+| `new_pack_qty` | `5` or `5;10` on a **parent** row | adds packs to `derivatives.csv` on apply (parent must allow derivatives) |
+| `who` `when` `why` | basis; `when` is `yyyy-mm-dd` (Excel's `m/d/yyyy` is accepted and normalised) | filled in on Apply if blank |
+| `— sku` `— kind` `— parent` `— components` | context | what the store will get |
+| `— unpriced` `— price now` `— basis` | context | what the last build resolved (`not built` if the row is not carried) |
+| `— cost` `— list` `— margin% at list` `— category` `— name` | context | vendor figures (pack = N × each, kit = sums) |
+
+Import validates every cell (scientific notation, non-numbers, bad dates, unknown fulfillment, part numbers
+Excel turned into dates, stripped leading zeros) and refuses the whole sheet while any error stands, naming
+sheet row and column. Derivative decisions live in the same `decisions/decisions.csv`, keyed `MSF.P5` / the kit
+MPN; a derivative with no row is `carry` (FR-173a).
 
 ## Derivatives — `brands/<brand>/derivatives.csv`
 

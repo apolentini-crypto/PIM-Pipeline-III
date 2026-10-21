@@ -178,3 +178,69 @@ def build(pack_dir: Path, var_dir: Path, *, source_root_override: Path | None = 
             con.close()
             write_catalog_export(var_dir / brand.slug / "exports" / build_id, cflat, cmeta)
     return res
+
+
+# ----------------------------------------------------------------- decision sheet round trip (A1 FR-171a/b/c)
+# One implementation for the window and the command line.
+STORE_PATH = Path(__file__).resolve().parents[1] / "store" / "store.yaml"
+
+
+def _grammar():
+    from pim.config.loader import load_store
+    from pim.util.sku import SkuGrammar
+    return SkuGrammar.from_store(load_store(STORE_PATH))
+
+
+def export_decision_sheet(pack_dir: Path, var_dir: Path, extra_fields: list[str], out: Path | None = None, *, source_root_override: Path | None = None) -> dict:
+    """Dry-run build, then write the one-row-per-CT-SKU sheet. Returns path, counts and a preview."""
+    from pim.decide.core import decision_sheet_rows, load_decisions, load_derivatives, write_sheet
+    rep = validate_pack(pack_dir)
+    if not rep.ok:
+        raise HaltError("G-PACK: " + "; ".join(str(e) for e in rep.errors))
+    r = build(pack_dir, var_dir, write=False, source_root_override=source_root_override)
+    brand = rep.models["brand.yaml"]; pricing = rep.models["pricing.yaml"]
+    if pricing is None:
+        raise HaltError("this brand has no pricing.yaml — the Decide stage needs it (A1 §3.5)")
+    header, rows = decision_sheet_rows(r.rows, load_decisions(pack_dir), load_derivatives(pack_dir), pricing, extra_fields,
+                                       catalog=r.catalog, brand=brand, grammar=_grammar())
+    out = out or (var_dir / brand.slug / "edits" / f"{brand.slug}-decisions.csv")
+    write_sheet(out, header, rows)
+    counts: dict[str, int] = {}
+    kinds: dict[str, int] = {}
+    for row in rows:
+        counts[row[3]] = counts.get(row[3], 0) + 1
+        k = "pack" if row[2].startswith("pack") else row[2]
+        kinds[k] = kinds.get(k, 0) + 1
+    return {"path": str(out), "rows": len(rows), "counts": counts, "kinds": kinds, "header": header, "preview": rows[:12],
+            "unpriced": sum(1 for row in rows if row[header.index("— unpriced")] == "yes")}
+
+
+def import_decision_sheet(pack_dir: Path, var_dir: Path, sheet_path: Path, *, apply: bool, who: str = "", why: str = "", source_root_override: Path | None = None) -> dict:
+    """Diff (and with apply=True, save) an edited sheet. Every editable cell is validated first (FR-171b)."""
+    import csv
+    from pim.decide.core import apply_sheet, diff_decisions, load_decisions, load_derivatives
+    rep = validate_pack(pack_dir)
+    if not rep.ok:
+        raise HaltError("G-PACK: " + "; ".join(str(e) for e in rep.errors))
+    pricing = rep.models["pricing.yaml"]
+    r = build(pack_dir, var_dir, write=False, source_root_override=source_root_override)
+    with sheet_path.open("r", encoding="utf-8-sig", newline="") as fh:
+        rd = csv.DictReader(fh)
+        missing = [c for c in ("mpn", "carry_state") if c not in (rd.fieldnames or [])]
+        if missing:
+            return {"error": f"this is not a decision sheet — column(s) {missing} are missing (export one from the Decide stage)"}
+        sheet = list(rd)
+    derivs = load_derivatives(pack_dir)
+    d = diff_decisions(load_decisions(pack_dir), sheet, set(r.rows), derivs, pricing.fulfillment_vocabulary if pricing else [], who, why)
+    res = {"changes": d["changes"][:300], "unknown": d["unknown_mpns"][:50], "counts": d["counts"], "errors": len(d["errors"])}
+    if apply:
+        if d["errors"]:
+            res["refused"] = "fix the errors first"
+        elif not d["changes"]:
+            res["refused"] = "no changes — nothing to apply"
+        else:
+            w = apply_sheet(pack_dir, d, derivs, who, why, sheet_path.name)
+            res["written"] = w["decisions"]
+            if "derivatives" in w:
+                res["written_derivatives"] = w["derivatives"]
+    return res

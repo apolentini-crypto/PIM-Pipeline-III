@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document ID** | `CT-PIM-SRS-001-A1` |
-| **Version** | 0.2 — **APPROVED by operator 2026-10-18 (D-8)**; OQ-21 terminus open |
+| **Version** | 0.3 — 0.2 **APPROVED by operator 2026-10-18 (D-8)**; 0.3 adds FR-171a/b and FR-173a per operator ruling 2026-10-20 (sheet = one row per CT SKU); OQ-21 terminus open |
 | **Date** | 2026-10-18 |
 | **Amends** | `CT-PIM-SRS-001` v1.0 (Baselined 2026-08-19) |
 | **Status** | Approved. To be folded into the SRS per its convention (**[AMENDED]** in place, logged in §12) at the next SRS revision. |
@@ -237,6 +237,31 @@ Stage 5 are untouched by this amendment.
   > Report by default, block by declaration.*
 - **FR-173** Every decision record shall carry a basis (who, when, why) and shall be
   removable, restoring the default state (`undecided`, no derivatives, rule pricing).
+- **FR-171a** *(0.3, ruling 2026-10-20)* The decision sheet shall have **one row per CT SKU**,
+  not per vendor MPN: every roster MPN (including `undecided` and `skip`, so it can be decided)
+  and, directly under its parent, every declared pack; kits follow at the end. Each row shows
+  the SKU the store will get (`— sku`), its kind (`original | pack | kit`), its parent and
+  components, whether it is currently unpriced, and the price and basis the last build
+  resolved. A pack or kit row carries its **own** hold reason, fulfillment, starting quantity
+  and hand-set price, which beat the values inherited or computed from the parent.
+  > *Rationale: the operator reviews what the store will sell. A 5-pack that can only be
+  > seen as a note on its parent's row cannot be held, repriced or removed from the sheet.*
+- **FR-171b** *(0.3)* Import of the decision sheet shall **validate every editable cell**
+  before any change is accepted: `carry_state` from the vocabulary (`carry | skip` only on
+  derivative rows); `price` a money amount, stored with two decimals; `initial_qty` a whole
+  number ≥ 0; `fulfillment` from `pricing.yaml → fulfillment_vocabulary`; `when` an ISO date
+  (an Excel-style `m/d/yyyy` is accepted and normalised); `new_pack_qty` one or more
+  positive integers. It shall apply the FR-139 damage detectors (scientific notation,
+  month-names where a part number was, stripped leading zeros against the roster) and
+  refuse the whole sheet while any error stands, naming row, column and value.
+- **FR-171c** *(0.3)* A new pack may be declared from the sheet by entering its quantity in
+  `new_pack_qty` on the parent's row; on apply it is appended to the derivatives table with
+  the sheet's who/when/why and the parent's state is checked per FR-148. Kits continue to be
+  declared in the derivatives table (components and name need more than one cell).
+- **FR-173a** *(0.3)* Decisions on derivatives are keyed by the **derivative key**
+  (`<parent MPN>.P<qty>` for a pack, the kit's MPN for a kit) in the same decisions table; a
+  derivative with no decision row is `carry` by default (backward compatible), `skip`
+  suppresses it without deleting its declaration.
 
 ### 3.9 Gates (additions to SRS §7.4)
 

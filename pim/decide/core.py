@@ -9,6 +9,8 @@ Inputs, all data in the brand pack:
   store/store.yaml          the SKU grammar (D-8)
 
 Carry states (FR-140): undecided · carry · skip · derivatives-only · carry+derivatives.
+Derivative decisions (FR-173a): same table, keyed `<parent>.P<qty>` (pack) or the kit MPN; carry | skip only.
+Decision sheet (FR-171a/b/c): one row per CT SKU; every editable cell validated on import.
 Price resolution (FR-155): decision price → most specific rule → msrp-passthrough → UNPRICED.
 Pack arithmetic (FR-146, ruling 2026-10-20): purchase_unit=each ⇒ a pack of N costs N × cost-per-each.
 Dimensions are never computed (FR-147). Everything carries provenance.
@@ -16,7 +18,9 @@ Dimensions are never computed (FR-147). Everything carries provenance.
 from __future__ import annotations
 
 import csv
+import datetime as _dt
 import math
+import re
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -28,6 +32,7 @@ from pim.util.sku import SkuError, SkuGrammar, build_sku, normalise_mpn
 
 CARRY_STATES = ("undecided", "carry", "skip", "derivatives-only", "carry+derivatives")
 DECISION_COLUMNS = ["mpn", "carry_state", "hold_reason", "fulfillment", "initial_qty", "price", "who", "when", "why"]
+DERIVATIVE_STATES = ("carry", "skip")   # FR-173a: a derivative is either produced or suppressed
 DERIVATIVE_COLUMNS = ["kind", "parent_mpn", "pack_qty", "mpn", "components", "name", "who", "when", "why"]
 
 
@@ -242,9 +247,15 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
     counts = {s: 0 for s in CARRY_STATES}
     for mpn in rows:
         counts[decisions[mpn].carry_state if mpn in decisions else "undecided"] += 1
-    stale = [d.mpn for d in decisions.values() if d.mpn not in rows]
+    dkeys = {dv.key for dv in derivatives}
+    stale = [d.mpn for d in decisions.values() if d.mpn not in rows and d.mpn not in dkeys]
     for m in stale:
         notes.append(f"decision for {m!r} refers to an MPN no longer in the roster — kept, not applied (FR-142)")
+    for k in sorted(dkeys):
+        dd = decisions.get(k)
+        if dd and dd.carry_state not in DERIVATIVE_STATES:
+            raise HaltError(f"decisions.csv: {k} is a pack/kit — its carry_state must be one of {DERIVATIVE_STATES}, not {dd.carry_state!r} (FR-173a)")
+    counts["derivatives_skipped"] = sum(1 for k in dkeys if k in decisions and decisions[k].carry_state == "skip")
 
     needs_sku = any(d.carry_state not in ("undecided", "skip") for d in decisions.values()) or bool(derivatives)
     if brand.brand_id is None and needs_sku:
@@ -295,6 +306,9 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
 
     # derivatives
     for dv in derivatives:
+        dd = decisions.get(dv.key)                      # the derivative's own decision (FR-173a)
+        if dd and dd.carry_state == "skip":
+            continue
         if dv.kind == "pack":
             parent = rows.get(dv.parent_mpn)
             pd = decisions.get(dv.parent_mpn)
@@ -305,7 +319,8 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
                 deriv_errors.append(f"pack {dv.key}: parent {dv.parent_mpn} is '{pstate}', needs derivatives-only or carry+derivatives (FR-148)"); continue
             sku = build_sku(brand.brand_id, normalise_mpn(dv.parent_mpn, brand.mpn_normalisation.model_dump()), grammar, pack_qty=dv.pack_qty)
             skip = {pf.cost, pf.list_price, pf.weight, "unit_length_mm", "unit_width_mm", "unit_height_mm"} - {None}
-            row = CatalogRow(sku, dv.parent_mpn, "pack", dv.parent_mpn, dv.pack_qty, _inherit(parent, dv.parent_mpn, skip), held.get(dv.parent_mpn) or (pd.hold_reason or None if pd else None))
+            own_hold = (dd.hold_reason or None) if dd else None
+            row = CatalogRow(sku, dv.parent_mpn, "pack", dv.parent_mpn, dv.pack_qty, _inherit(parent, dv.parent_mpn, skip), own_hold or held.get(dv.parent_mpn) or (pd.hold_reason or None if pd else None))
             n = Decimal(dv.pack_qty)
             for fname, label in ((pf.cost, "cost"), (pf.list_price, "list"), (pf.weight, "weight")):
                 if fname and fname in parent.fields:
@@ -315,7 +330,7 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
             base_name = parent.fields.get(pf.name)
             row.fields[pf.name] = FieldValue(dv.name or ((base_name.value if base_name else dv.parent_mpn) + pricing.pack_name_suffix.format(qty=dv.pack_qty)), Provenance("derived" if not dv.name else "decision", f"pack-name:{dv.key}"))
             row.fields["pack_qty"] = FieldValue(str(dv.pack_qty), Provenance("decision", dv.key))
-            add(row, None, parent.fields[pf.category].value if pf.category and pf.category in parent.fields else "")
+            add(row, dd, parent.fields[pf.category].value if pf.category and pf.category in parent.fields else "")
         else:  # kit
             missing = [m for m, _ in dv.components if m not in rows]
             if missing:
@@ -326,7 +341,7 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
             except SkuError as e:
                 deriv_errors.append(f"kit {dv.mpn}: {e}"); continue
             skip = {pf.cost, pf.list_price, pf.weight, "mpn", "ean", "ean_box", "unit_length_mm", "unit_width_mm", "unit_height_mm"} - {None}
-            row = CatalogRow(sku, dv.mpn, "kit", None, None, _inherit(first, first.key, skip))
+            row = CatalogRow(sku, dv.mpn, "kit", None, None, _inherit(first, first.key, skip), (dd.hold_reason or None) if dd else None)
             for fname in (pf.cost, pf.list_price, pf.weight):
                 if not fname:
                     continue
@@ -343,7 +358,7 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
             row.fields[pf.name] = FieldValue(dv.name or f"{dv.mpn} kit", Provenance("decision" if dv.name else "derived", f"kit-name:{dv.mpn}"))
             row.fields["mpn"] = FieldValue(dv.mpn, Provenance("decision", f"kit:{dv.mpn}"))
             row.fields["kit_components"] = FieldValue(";".join(f"{m}:{q}" for m, q in dv.components), Provenance("decision", f"kit:{dv.mpn}"))
-            add(row, None, first.fields[pf.category].value if pf.category and pf.category in first.fields else "")
+            add(row, dd, first.fields[pf.category].value if pf.category and pf.category in first.fields else "")
 
     # plausibility (INV-14): per-each weight far from its category's median
     if pf.weight:
@@ -375,21 +390,107 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
     return DecideResult(catalog, decisions, derivatives, counts, assertions, notes)
 
 
-# ----------------------------------------------------------------- the decision sheet (FR-171)
-def decision_sheet_rows(rows: dict[str, CanonicalRow], decisions: dict[str, Decision], derivatives: list[Derivative], pricing: Pricing, extra_fields: list[str]) -> tuple[list[str], list[list[str]]]:
+# ----------------------------------------------------------------- the decision sheet (FR-171, 171a/b/c)
+SHEET_HEADER = ["mpn", "— sku", "— kind", "carry_state", "hold_reason", "fulfillment", "initial_qty", "price", "new_pack_qty", "who", "when", "why",
+                "— parent", "— components", "— unpriced", "— price now", "— basis", "— cost", "— list", "— margin% at list", "— category", "— name"]
+
+
+def _safe_sku(brand: Optional[Brand], grammar: Optional[SkuGrammar], mpn: str, pack_qty: int = 0) -> str:
+    if brand is None or grammar is None or brand.brand_id is None:
+        return ""
+    try:
+        return build_sku(brand.brand_id, normalise_mpn(mpn, brand.mpn_normalisation.model_dump()), grammar, pack_qty=pack_qty or None)
+    except SkuError:
+        return ""
+
+
+def _ctx_money(v) -> str:
+    """Context cost/list on the sheet: a Decimal or a vendor text; shown as money when numeric, else as-is."""
+    if v is None or v == "":
+        return ""
+    d = v if isinstance(v, Decimal) else _num(v)
+    return _money(d) if d is not None else str(v)
+
+
+def _margin(cost: Optional[Decimal], lp: Optional[Decimal]) -> str:
+    return f"{float((lp - cost) / lp * 100):.1f}" if cost is not None and lp else ""
+
+
+def decision_sheet_rows(rows: dict[str, CanonicalRow], decisions: dict[str, Decision], derivatives: list[Derivative], pricing: Pricing,
+                        extra_fields: list[str], catalog: Optional[dict[str, CatalogRow]] = None, brand: Optional[Brand] = None,
+                        grammar: Optional[SkuGrammar] = None) -> tuple[list[str], list[list[str]]]:
+    """One row per CT SKU (FR-171a): each roster MPN (whatever its state), its packs directly under it,
+    kits at the end. Columns without the '— ' prefix are editable; the rest are context, ignored on import."""
     pf = pricing.fields
-    header = ["mpn", "carry_state", "hold_reason", "fulfillment", "initial_qty", "price", "who", "when", "why",
-              "— derivatives", "— cost", "— list", "— margin% at list", "— category", "— name", *["— " + f for f in extra_fields]]
-    out = []
+    catalog = catalog or {}
+    header = [*SHEET_HEADER, *["— " + f for f in extra_fields]]
+    out: list[list[str]] = []
+
+    def built(sku: str) -> tuple[str, str, str]:
+        c = catalog.get(sku)
+        if not c:
+            return "", "", "not built"
+        return ("yes" if c.unpriced else ""), (c.fields["price"].value if "price" in c.fields else ""), c.price_basis
+
+    def dec_cols(d: Optional[Decision], default_state: str) -> list[str]:
+        return [d.carry_state if d else default_state, d.hold_reason if d else "", d.fulfillment if d else "", d.initial_qty if d else "",
+                d.price if d else "", "", d.who if d else "", d.when if d else "", d.why if d else ""]
+
+    packs_by_parent: dict[str, list[Derivative]] = {}
+    for dv in derivatives:
+        if dv.kind == "pack":
+            packs_by_parent.setdefault(dv.parent_mpn, []).append(dv)
+
     for mpn in sorted(rows):
         r = rows[mpn]; d = decisions.get(mpn)
         g = lambda k: r.fields[k].value if k and k in r.fields else ""
         cost, lp = _num(g(pf.cost)), _num(g(pf.list_price))
-        margin = f"{float((lp - cost) / lp * 100):.1f}" if cost is not None and lp else ""
-        dv = "; ".join((f"P{x.pack_qty}" if x.kind == "pack" else f"kit {x.mpn}") for x in derivatives if (x.kind == "pack" and x.parent_mpn == mpn) or (x.kind == "kit" and any(m == mpn for m, _ in x.components)))
-        out.append([mpn, d.carry_state if d else "undecided", d.hold_reason if d else "", d.fulfillment if d else "", d.initial_qty if d else "", d.price if d else "",
-                    d.who if d else "", d.when if d else "", d.why if d else "", dv, g(pf.cost), g(pf.list_price), margin, g(pf.category), g(pf.name), *[g(f) for f in extra_fields]])
+        sku = _safe_sku(brand, grammar, mpn)
+        unpriced, price_now, basis = built(sku) if sku else ("", "", "")
+        if not sku and brand is not None and brand.brand_id is None:
+            basis = "no brand id"
+        out.append([mpn, sku, "original", *dec_cols(d, "undecided"), "", "", unpriced, price_now, basis,
+                    _ctx_money(g(pf.cost)), _ctx_money(g(pf.list_price)), _margin(cost, lp), g(pf.category), g(pf.name), *[g(f) for f in extra_fields]])
+        for dv in sorted(packs_by_parent.get(mpn, []), key=lambda x: x.pack_qty):
+            dd = decisions.get(dv.key)
+            n = Decimal(dv.pack_qty)
+            pc, pl = (cost * n if cost is not None else None), (lp * n if lp is not None else None)
+            psku = _safe_sku(brand, grammar, mpn, dv.pack_qty)
+            unpriced, price_now, basis = built(psku) if psku else ("", "", "")
+            base_name = g(pf.name) or mpn
+            name = dv.name or base_name + pricing.pack_name_suffix.format(qty=dv.pack_qty)
+            out.append([dv.key, psku, f"pack P{dv.pack_qty}", *dec_cols(dd, "carry"), mpn, "", unpriced, price_now, basis,
+                        _ctx_money(pc), _ctx_money(pl), _margin(pc, pl), g(pf.category), name, *["" for _ in extra_fields]])
+
+    for dv in sorted((x for x in derivatives if x.kind == "kit"), key=lambda x: x.mpn):
+        dd = decisions.get(dv.key)
+        comps = ";".join(f"{m}:{q}" for m, q in dv.components)
+        tc = td = Decimal(0); okc = okl = True; cat = ""
+        for m, q in dv.components:
+            cr = rows.get(m)
+            if cr is None:
+                okc = okl = False; break
+            if not cat and pf.category and pf.category in cr.fields:
+                cat = cr.fields[pf.category].value
+            c = _num(cr.fields[pf.cost].value) if pf.cost and pf.cost in cr.fields else None
+            l = _num(cr.fields[pf.list_price].value) if pf.list_price and pf.list_price in cr.fields else None
+            if c is None: okc = False
+            else: tc += c * q
+            if l is None: okl = False
+            else: td += l * q
+        ksku = _safe_sku(brand, grammar, dv.mpn)
+        unpriced, price_now, basis = built(ksku) if ksku else ("", "", "")
+        out.append([dv.key, ksku, "kit", *dec_cols(dd, "carry"), "", comps, unpriced, price_now, basis,
+                    _ctx_money(tc) if okc else "", _ctx_money(td) if okl else "", _margin(tc if okc else None, td if okl else None), cat, dv.name or f"{dv.mpn} kit", *["" for _ in extra_fields]])
     return header, out
+
+
+def write_sheet(path: Path, header: list[str], rows: list[list[str]]) -> Path:
+    """Excel-friendly: BOM, CRLF, everything quoted (so Excel keeps '0045' and '5-10' as text when opened via Data→From Text)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.writer(fh, quoting=csv.QUOTE_ALL, lineterminator="\r\n"); w.writerow(header); w.writerows(rows)
+    return path
 
 
 def write_decisions(pack_dir: Path, decisions: dict[str, Decision]) -> Path:
@@ -404,28 +505,168 @@ def write_decisions(pack_dir: Path, decisions: dict[str, Decision]) -> Path:
     return p
 
 
-def diff_decisions(current: dict[str, Decision], sheet_rows: list[dict[str, str]], roster: set[str]) -> dict:
-    """Change set of a decision sheet against current decisions. Only the decision columns count."""
+def write_derivatives(pack_dir: Path, derivatives: list[Derivative]) -> Path:
+    p = pack_dir / "derivatives.csv"
+    with p.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh, lineterminator="\n")
+        w.writerow(DERIVATIVE_COLUMNS)
+        for dv in sorted(derivatives, key=lambda x: (x.kind, x.parent_mpn, x.pack_qty, x.mpn)):
+            w.writerow([dv.kind, dv.parent_mpn, str(dv.pack_qty) if dv.kind == "pack" else "", dv.mpn,
+                        ";".join(f"{m}:{q}" for m, q in dv.components), dv.name, dv.who, dv.when, dv.why])
+    return p
+
+
+# ---- cell validators (FR-171b). Each returns (normalised value, error or None).
+_MONEY = re.compile(r"^\$?\s*(\d{1,3}(,\d{3})*|\d+)(\.\d{1,2})?$")
+_SCI = re.compile(r"^\d+(\.\d+)?[eE][+-]?\d+$")
+_DATE_ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+_DATE_US = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2}|\d{4})$")
+_EXCEL_MONTH = re.compile(r"^(\d{1,2}-[A-Z][a-z]{2}|[A-Z][a-z]{2}-\d{1,2}|\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}/\d{1,2})$")
+
+
+def _v_price(v: str) -> tuple[str, Optional[str]]:
+    if not v:
+        return "", None
+    if _SCI.match(v):
+        return v, "looks like Excel scientific notation (e.g. 1.00E+2) — type the plain number"
+    if not _MONEY.match(v):
+        return v, "price must be a money amount like 99 or 99.95"
+    return _money(Decimal(v.replace("$", "").replace(",", "").strip())), None
+
+
+def _v_qty(v: str) -> tuple[str, Optional[str]]:
+    if not v:
+        return "", None
+    if _SCI.match(v):
+        return v, "looks like Excel scientific notation — type the plain number"
+    if not re.fullmatch(r"\d+(\.0+)?", v):
+        return v, "starting quantity must be a whole number (0 or more)"
+    return str(int(float(v))), None
+
+
+def _v_when(v: str) -> tuple[str, Optional[str]]:
+    if not v:
+        return "", None
+    if _DATE_ISO.match(v):
+        try:
+            _dt.date.fromisoformat(v); return v, None
+        except ValueError:
+            return v, "not a real date"
+    m = _DATE_US.match(v)
+    if m:   # Excel re-saved it as m/d/yyyy
+        mo, dd, yy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        yy = yy + 2000 if yy < 100 else yy
+        try:
+            return _dt.date(yy, mo, dd).isoformat(), None
+        except ValueError:
+            return v, "not a real date"
+    return v, "date must be yyyy-mm-dd"
+
+
+def _v_packs(v: str) -> tuple[list[int], Optional[str]]:
+    if not v:
+        return [], None
+    out = []
+    for part in re.split(r"[;,\s]+", v.strip()):
+        if not part:
+            continue
+        if not part.isdigit() or int(part) < 2:
+            return [], f"new_pack_qty must be whole numbers of 2 or more, separated by ';' — got {part!r}"
+        out.append(int(part))
+    return sorted(set(out)), None
+
+
+def _looks_excel_damaged_key(k: str) -> bool:
+    return bool(_EXCEL_MONTH.match(k)) or bool(_SCI.match(k))
+
+
+def diff_decisions(current: dict[str, Decision], sheet_rows: list[dict[str, str]], roster: set[str],
+                   derivatives: list[Derivative] = (), fulfillment_vocabulary: list[str] = (), who: str = "", why: str = "") -> dict:
+    """Change set of a decision sheet against current decisions, every editable cell validated (FR-171b).
+    Returns changes (with 'error' on bad cells), unknown keys, the new decision table, and new packs (FR-171c)."""
     changes, unknown = [], []
     new: dict[str, Decision] = {k: Decision(**v.__dict__) for k, v in current.items()}
-    for r in sheet_rows:
-        mpn = (r.get("mpn") or "").strip()
-        if not mpn:
+    derivs = list(derivatives)
+    dkeys = {dv.key for dv in derivs}
+    new_packs: list[Derivative] = []
+    roster_nolz = {k.lstrip("0"): k for k in roster if k != k.lstrip("0")}
+    vocab = list(fulfillment_vocabulary)
+
+    def err(row_no: int, key: str, field: str, before: str, after: str, msg: str):
+        changes.append({"row": row_no, "mpn": key, "field": field, "before": before, "after": after, "error": msg})
+
+    for i, r in enumerate(sheet_rows, start=2):
+        key = (r.get("mpn") or "").strip()
+        if not key:
             continue
-        if mpn not in roster:
-            unknown.append(mpn); continue
-        cur = current.get(mpn, Decision(mpn))
-        upd = Decision(mpn, (r.get("carry_state") or "undecided").strip(), (r.get("hold_reason") or "").strip(), (r.get("fulfillment") or "").strip(),
-                       (r.get("initial_qty") or "").strip(), (r.get("price") or "").strip(), (r.get("who") or "").strip(), (r.get("when") or "").strip(), (r.get("why") or "").strip())
-        if upd.carry_state not in CARRY_STATES:
-            changes.append({"mpn": mpn, "field": "carry_state", "before": cur.carry_state, "after": upd.carry_state, "error": f"not one of {CARRY_STATES}"}); continue
-        for f in ("carry_state", "hold_reason", "fulfillment", "initial_qty", "price"):
-            if getattr(cur, f) != getattr(upd, f):
-                changes.append({"mpn": mpn, "field": f, "before": getattr(cur, f), "after": getattr(upd, f)})
-        if any(getattr(cur, f) != getattr(upd, f) for f in ("carry_state", "hold_reason", "fulfillment", "initial_qty", "price")):
-            new[mpn] = upd
+        is_deriv = key in dkeys
+        if key not in roster and not is_deriv:
+            hint = ""
+            if _looks_excel_damaged_key(key):
+                hint = " — looks like Excel turned the part number into a date/number; re-export and open the CSV via Data → From Text"
+            elif key in roster_nolz:
+                hint = f" — leading zeros were stripped; did you mean {roster_nolz[key]!r}?"
+            if hint:
+                err(i, key, "mpn", "", key, "not in the roster" + hint)
+            else:
+                unknown.append(key)
+            continue
+        cur = current.get(key, Decision(key, "carry" if is_deriv else "undecided"))
+        g = lambda f: (r.get(f) or "").strip()
+        st = g("carry_state") or ("carry" if is_deriv else "undecided")
+        allowed = DERIVATIVE_STATES if is_deriv else CARRY_STATES
+        bad = False
+        if st not in allowed:
+            err(i, key, "carry_state", cur.carry_state, st, f"not one of {allowed}" + (" (packs and kits are carried or skipped)" if is_deriv else "")); bad = True
+        price, e = _v_price(g("price"))
+        if e: err(i, key, "price", cur.price, g("price"), e); bad = True
+        qty, e = _v_qty(g("initial_qty"))
+        if e: err(i, key, "initial_qty", cur.initial_qty, g("initial_qty"), e); bad = True
+        ful = g("fulfillment")
+        if ful and vocab and ful not in vocab:
+            err(i, key, "fulfillment", cur.fulfillment, ful, f"not one of {vocab} (pricing.yaml → fulfillment_vocabulary)"); bad = True
+        when, e = _v_when(g("when"))
+        if e: err(i, key, "when", cur.when, g("when"), e); bad = True
+        packs, e = _v_packs(g("new_pack_qty"))
+        if e: err(i, key, "new_pack_qty", "", g("new_pack_qty"), e); bad = True
+        if packs and is_deriv:
+            err(i, key, "new_pack_qty", "", g("new_pack_qty"), "a pack can only be declared on the parent product's row"); bad = True
+        if bad:
+            continue
+        upd = Decision(key, st, g("hold_reason"), ful, qty, price, g("who"), when, g("why"))
+        diff_fields = [f for f in ("carry_state", "hold_reason", "fulfillment", "initial_qty", "price") if getattr(cur, f) != getattr(upd, f)]
+        for f in diff_fields:
+            changes.append({"row": i, "mpn": key, "field": f, "before": getattr(cur, f), "after": getattr(upd, f)})
+        if diff_fields:
+            new[key] = upd
+        for q in packs:
+            pk = f"{key}.P{q}"
+            if pk in dkeys:
+                err(i, key, "new_pack_qty", "", str(q), f"pack {pk} already exists — edit its own row instead"); continue
+            if upd.carry_state not in ("derivatives-only", "carry+derivatives"):
+                err(i, key, "new_pack_qty", "", str(q), f"to add a pack, set this row's carry_state to derivatives-only or carry+derivatives (now {upd.carry_state!r}, FR-148)"); continue
+            dkeys.add(pk)
+            new_packs.append(Derivative("pack", key, q, "", [], "", who or upd.who, "", why or ""))   # the apply's who/why, not the parent row's old basis
+            changes.append({"row": i, "mpn": key, "field": "new_pack_qty", "before": "", "after": f"P{q} → new row {pk}"})
     by_field: dict[str, int] = {}
     for c in changes:
         by_field[c["field"]] = by_field.get(c["field"], 0) + 1
-    return {"changes": changes, "unknown_mpns": unknown, "new_decisions": new, "errors": [c for c in changes if "error" in c],
-            "counts": {"changes": len(changes), "by_field": by_field, "unknown": len(unknown), "errors": sum(1 for c in changes if "error" in c)}}
+    errors = [c for c in changes if "error" in c]
+    return {"changes": changes, "unknown_mpns": unknown, "new_decisions": new, "new_packs": new_packs, "errors": errors,
+            "counts": {"changes": len(changes), "by_field": by_field, "unknown": len(unknown), "errors": len(errors), "new_packs": len(new_packs)}}
+
+
+def apply_sheet(pack_dir: Path, d: dict, derivatives: list[Derivative], who: str, why: str, sheet_name: str) -> dict[str, str]:
+    """Write the outcome of diff_decisions: decisions.csv always, derivatives.csv when packs were added.
+    Caller has already checked d['errors'] is empty and d['changes'] is not."""
+    when = _dt.datetime.now().date().isoformat()
+    for ch in d["changes"]:
+        if ch["mpn"] in d["new_decisions"]:
+            nd = d["new_decisions"][ch["mpn"]]
+            nd.who = nd.who or (who or "operator"); nd.when = nd.when or when; nd.why = nd.why or (why or f"decision sheet {sheet_name}")
+    written = {"decisions": str(write_decisions(pack_dir, d["new_decisions"]))}
+    if d["new_packs"]:
+        for dv in d["new_packs"]:
+            dv.who = dv.who or (who or "operator"); dv.when = dv.when or when; dv.why = dv.why or (why or f"decision sheet {sheet_name}")
+        written["derivatives"] = str(write_derivatives(pack_dir, [*derivatives, *d["new_packs"]]))
+    return written

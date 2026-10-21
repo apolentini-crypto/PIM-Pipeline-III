@@ -160,13 +160,14 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
   <div class="cols" id="cols"><span class="hint">Pick a file above.</span></div>
 </div>
 
-<h2><span class="n">4</span>Roster and checks</h2>
+<h2><span class="n">4</span>Which file is the product list?</h2>
 <div class="card">
+  <p class="hint" style="margin:0 0 .6rem">Your files don't all list the same part numbers (a price book has codes that were never catalogued; a scrape misses some). The pipeline needs one answer to <b>"which part numbers are the products?"</b> — pick the file whose list <i>is</i> the product list. Every other file only adds columns to those products; a part number that is in another file but not in this one is reported, not added.</p>
   <div class="row">
-    <label>Roster file <select id="primary_source"></select><span class="cap"><b>Required.</b> Its part-number list defines which products exist. Usually the catalog or category file, not the price list.</span></label>
-    <label>Expected product count <input type="number" id="roster_count" placeholder="leave blank to skip"><span class="cap">If you know how many products there should be, the build checks it and stops on a mismatch.</span></label>
+    <label>The product-list file <select id="primary_source"></select><span class="cap"><b>Required.</b> Usually the catalog / category / product-master file. Not the price list — those carry discontinued and unreleased codes.</span></label>
+    <label>How many products should there be? <input type="number" id="roster_count" placeholder="leave blank if you don't know"><span class="cap">Optional check. If you type 322 and the file yields 330, the build stops and tells you — so a re-sent vendor file can't slip through. Blank = not checked.</span></label>
   </div>
-  <p class="hint">The roster file's part numbers define which products exist. Other files only add information to them. If the brand's price list uses different codes than its catalog, those code pairs go in <code>joins.yaml → associations</code> (editable later).</p>
+  <p class="hint">If the price list uses different codes than the catalog for the same product (HS8147 vs 8147), those pairs go in <code>joins.yaml → associations</code>; the window shows them but does not edit them yet.</p>
 </div>
 
 <h2><span class="n">5</span>Save and check</h2>
@@ -219,10 +220,10 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
 </section>
 
 <section class="stage" id="stage-decide" hidden>
-  <div class="guide"><b>What this stage does</b> Two kinds of decisions live here. <b>A — which products the store sells, and how:</b> the decision sheet has one row per vendor part number; you set <code>carry_state</code> (carry · skip · hold · derivatives-only · carry+derivatives), fulfillment, a starting quantity, or a hand-set price. Packs and kits (a 5-pack, a set) go in <code>derivatives.csv</code>. The build turns all of that into <b>one row per CT SKU</b> — the catalog table below. <b>B — hand corrections to the data itself</b> (a wrong weight, a better title): the field sheet further down; those land as reversible overrides.</div>
+  <div class="guide"><b>What this stage does</b> Two kinds of decisions live here. <b>A — which products the store sells, and how:</b> the decision sheet has <b>one row per CT SKU</b> — every vendor part number, each pack directly under its parent (<code>MSF.P5</code>), kits at the end. Per row you set <code>carry_state</code> (carry · skip · derivatives-only · carry+derivatives; a pack or kit is just carry or skip), a hold reason, fulfillment, a starting quantity, or a hand-set price. To add a pack, type its quantity in <code>new_pack_qty</code> on the parent's row (<code>5</code> or <code>5;10</code>). Kits still go in <code>derivatives.csv</code>. Every cell is checked on import — money, whole numbers, dates, vocabulary — and the sheet is refused while any error stands. The build turns it into the catalog table below. <b>B — hand corrections to the data itself</b> (a wrong weight, a better title): the field sheet further down; those land as reversible overrides.</div>
   <div class="card">
     <b>A. Decision sheet — what to carry</b>
-    <p class="hint">1. Export the sheet. 2. Open it in Excel and change the first nine columns (columns starting with "—" are context and are ignored). 3. Preview shows every change. 4. Apply saves the decisions. 5. Build.</p>
+    <p class="hint">1. Export the sheet. 2. Open it in Excel; edit the columns <b>without</b> a "—" prefix (<code>mpn</code> is the key — never change it; "—" columns are context and are ignored). Save as CSV. 3. Preview lists every change and every bad cell by row. 4. Apply saves <code>decisions/decisions.csv</code> (and <code>derivatives.csv</code> for new packs). 5. Build.</p>
     <div class="row"><label>Extra context columns <input type="text" id="decFields" class="wide" placeholder="ean,section_l3,unit_weight_kg"></label><button id="decExportBtn">Export decision sheet</button></div>
     <div id="decExportOut"></div>
     <div class="row" style="margin-top:.8rem"><label>Edited sheet path <input type="text" id="decPath" class="wide"></label><button class="ghost" id="decPreviewBtn">Preview decisions</button><button id="decApplyBtn">Apply decisions</button></div>
@@ -234,15 +235,15 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
     <div id="catOut"><span class="hint">Build first, then refresh.</span></div>
   </div>
   <div class="card">
-    <b>B. Field sheet — hand corrections to data</b>
+    <b>B. Field-edit sheet — hand corrections to data values</b> <span class="hint">(file name <code>&lt;brand&gt;-&lt;build id&gt;.csv</code>, one column per field — not the decision sheet)</span>
     <p class="hint">1. Export the fields you want to work on. 2. Open the CSV in Excel, change values, save as CSV. 3. Preview shows every change before anything is written. 4. Apply lands them as reversible overrides; the next Build carries them.</p>
-    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="name,book_list_price,book_net_price,esd_safe"></label><button id="csvExportBtn">Export CSV</button></div>
+    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="name,book_list_price,book_net_price,esd_safe"></label><button id="csvExportBtn">Export field-edit sheet</button></div>
     <div id="csvExportOut"></div>
     <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview field edits</button><button id="csvApplyBtn">Apply as overrides</button></div>
     <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-10"></label></div>
     <div id="csvOut"></div>
   </div>
-  <div class="card planned-card"><b>Packs and kits</b> are declared in <code>brands/&lt;brand&gt;/derivatives.csv</code>: <code>pack,MSF,5,…</code> makes <code>59.MSF.P5</code> (5 × each: cost, list and weight multiplied; dimensions never computed); <code>kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,"Spatula Set, 5 pc",…</code> makes <code>59.MS-KIT5</code> (sums of the components). The parent's carry_state must allow derivatives. Pricing rules (markup on cost, discount off list, fixed, list as-is, with rounding and a margin floor) live in <code>pricing.yaml</code>. A form for these comes next.</div>
+  <div class="card planned-card"><b>Packs and kits.</b> A pack is added from the sheet (<code>new_pack_qty</code> on the parent's row) or in <code>brands/&lt;brand&gt;/derivatives.csv</code>: <code>pack,MSF,5,…</code> makes <code>59.MSF.P5</code> (5 × each: cost, list and weight multiplied; dimensions never computed); <code>kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,"Spatula Set, 5 pc",…</code> makes <code>59.MS-KIT5</code> (sums of the components). The parent's carry_state must allow derivatives. Pricing rules (markup on cost, discount off list, fixed, list as-is, with rounding and a margin floor) live in <code>pricing.yaml</code>. A form for these comes next.</div>
 </section>
 
 <section class="stage" id="stage-derive" hidden>
@@ -460,9 +461,9 @@ $("#diffBtn").onclick = async()=>{
     return `<div class="status ${c.changed_rows||c.added||c.removed?'warn':'ok'}"><b>${what}</b> — ${c.added} added · ${c.removed} removed · ${c.changed_rows} changed (${c.changed_cells} cells) · ${c.unchanged_rows} unchanged</div>` + (d.added.length?`<p>Added: ${d.added.map(esc).join(", ")}</p>`:"") + (d.removed.length?`<p>Removed: ${d.removed.map(esc).join(", ")}</p>`:"") + (rows?`<table><tr><th>${col}</th><th>field</th><th>before</th><th>after</th></tr>${rows}</table>`:""); };
   $("#diffOut").innerHTML = `<p class="hint"><b>Products</b> = one row per vendor part number (what the files say). <b>Catalog</b> = one row per CT SKU (what the store will get: decisions, packs, kits, prices). A decision change shows only in the catalog diff.</p>` + section(r,"Products","product") + section(r.catalog,"Catalog","CT SKU");
 };
-$("#decExportBtn").onclick = async()=>{ out("decExportOut","Building the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; const cnt=Object.entries(r.counts).map(([k,v])=>`${k}: ${v}`).join(" · "); out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products. Carry states now: ${esc(cnt)}. Open in Excel, edit the first nine columns, save as CSV.`,"ok"); };
-function decReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} decision change(s) · ${c.unknown} unknown part number(s) · ${c.errors} error(s)`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Saved to <code>${esc(r.written)}</code> — now run <b>Build</b>.`:'')+`</div>`;
-  if (r.changes.length) h+=`<table><tr><th>part number</th><th>column</th><th>before</th><th>after</th><th></th></tr>${r.changes.map(x=>`<tr><td>${esc(x.mpn)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td class="st-missing">${esc(x.error||'')}</td></tr>`).join("")}</table>`;
+$("#decExportBtn").onclick = async()=>{ out("decExportOut","Building the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; const cnt=Object.entries(r.counts).map(([k,v])=>`${k}: ${v}`).join(" · "); const kinds=Object.entries(r.kinds||{}).map(([k,v])=>`${v} ${k}`).join(" · "); out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows (${esc(kinds)}); ${r.unpriced} unpriced. Carry states: ${esc(cnt)}. Open in Excel, edit the columns without a "—", save as CSV.`,"ok"); };
+function decReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) · ${c.new_packs||0} new pack(s) · ${c.unknown} unknown key(s) · <b>${c.errors} error(s)</b>`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Saved to <code>${esc(r.written)}</code>${r.written_derivatives?` and <code>${esc(r.written_derivatives)}</code>`:''} — now run <b>Build</b>.`:'')+`</div>`;
+  if (r.changes.length) h+=`<table><tr><th>sheet row</th><th>key</th><th>column</th><th>before</th><th>after</th><th>problem</th></tr>${r.changes.map(x=>`<tr class="${x.error?'st-missing':''}"><td>${esc(x.row??'')}</td><td>${esc(x.mpn)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.error||'')}</td></tr>`).join("")}</table>`;
   if (r.unknown.length) h+=`<p class="status bad">Not in the roster (ignored): ${r.unknown.map(esc).join(", ")}</p>`; return h; }
 $("#decPreviewBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
 $("#decApplyBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
