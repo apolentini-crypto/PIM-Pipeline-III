@@ -57,7 +57,12 @@ def cmd_build(args) -> int:
     alias_notes = [n for n in r.notes if "alias" in n]
     print(f"  alias-supplied values: {len(alias_notes)}" + (f" (e.g. {alias_notes[0]})" if alias_notes else ""))
     if r.export_path:
-        print(f"  export {r.export_path.relative_to(REPO)}  rows_sha256={r.rows_sha256[:16]}")
+        ep = r.export_path
+        try:
+            ep = ep.relative_to(REPO)
+        except ValueError:
+            pass
+        print(f"  export {ep}  rows_sha256={r.rows_sha256[:16]}")
     return 0
 
 
@@ -120,6 +125,24 @@ def cmd_import_csv(args) -> int:
 
 def _store():
     return load_store(STORE)
+
+
+def cmd_ui(args) -> int:
+    from pim.ui.server import serve
+    serve(port=args.port, open_browser=not args.no_browser)
+    return 0
+
+
+def cmd_status(args) -> int:
+    from pim.ui.server import source_status
+    st = source_status(args.brand)
+    print(f"last build: {st['build_id'] or '(none)'} {st['built'] or ''}")
+    for r in st["sources"]:
+        extra = f"  size {r.get('was_size')} -> {r.get('size')}" if r["state"] == "changed" else ""
+        print(f"  {r['state']:9} {r['id']:4} {r['path']}{extra}")
+    s = st["summary"]
+    print(f"unchanged {s['unchanged']} · changed {s['changed']} · new {s['new']} · missing {s['missing']}" + ("  → run: pim build " + args.brand if (s['changed'] or s['new']) else ""))
+    return 0
 
 
 def cmd_validate_pack(args) -> int:
@@ -203,6 +226,11 @@ def main(argv=None) -> int:
     p = sub.add_parser("import-csv", help="diff an edited sheet against the build; --apply lands overrides (FR-138/139)")
     p.add_argument("brand"); p.add_argument("file"); p.add_argument("--apply", action="store_true")
     p.add_argument("--who", default="operator"); p.add_argument("--why"); p.set_defaults(fn=cmd_import_csv)
+
+    p = sub.add_parser("ui", help="open the PIM window in your browser (local only)")
+    p.add_argument("--port", type=int, default=8766); p.add_argument("--no-browser", action="store_true"); p.set_defaults(fn=cmd_ui)
+    p = sub.add_parser("status", help="which source files changed since the last build (FR-11)")
+    p.add_argument("brand"); p.set_defaults(fn=cmd_status)
 
     p = sub.add_parser("schemas", help="write JSON schemas for pack files to docs/schemas/")
     p.set_defaults(fn=cmd_schemas)

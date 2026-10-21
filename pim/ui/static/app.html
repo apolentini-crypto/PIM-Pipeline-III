@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIM</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--fg:#1c2230;--muted:#5d6675;--line:#d8dce3;--accent:#1f5f8b;--accent-bg:#e7eff6;--ok:#1e7f63;--ok-bg:#e5f3ee;--warn:#b8600f;--warn-bg:#fdf1e3;--bad:#b3261e;--bad-bg:#fbe9e7;--mono:ui-monospace,Consolas,"Cascadia Mono",monospace}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:1.05rem;margin:0}
+header .sp{flex:1}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,42%);gap:0;min-height:calc(100vh - 50px)}
+main{padding:1rem 1.25rem;min-width:0}
+aside{border-left:1px solid var(--line);background:#fbfbfc;padding:.75rem 1rem;min-width:0;position:sticky;top:96px;height:calc(100vh - 96px);overflow:auto}
+h2{font-size:1rem;margin:1.4rem 0 .5rem;display:flex;align-items:center;gap:.5rem}
+h2 .n{display:inline-grid;place-items:center;width:1.4rem;height:1.4rem;border-radius:50%;background:var(--accent);color:#fff;font-size:.75rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;margin-bottom:.75rem}
+.row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:end}
+label{display:flex;flex-direction:column;gap:.2rem;font-size:.8rem;color:var(--muted)}
+label.inline{flex-direction:row;align-items:center;gap:.35rem;color:var(--fg);font-size:.85rem}
+input[type=text],input[type=number],select{font:inherit;padding:.35rem .5rem;border:1px solid var(--line);border-radius:6px;background:#fff;min-width:8rem}
+input[type=text].wide{min-width:28rem;max-width:100%}
+button{font:inherit;padding:.4rem .8rem;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--accent)}
+button.small{padding:.2rem .5rem;font-size:.8rem}
+button:disabled{opacity:.5;cursor:default}
+.hint{color:var(--muted);font-size:.8rem;margin:.25rem 0 0}
+.tag{display:inline-block;font-size:.72rem;font-weight:600;padding:.08rem .45rem;border-radius:4px}
+.tag.ok{background:var(--ok-bg);color:var(--ok)} .tag.warn{background:var(--warn-bg);color:var(--warn)} .tag.bad{background:var(--bad-bg);color:var(--bad)} .tag.acc{background:var(--accent-bg);color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{border-bottom:1px solid var(--line);padding:.3rem .45rem;text-align:left;vertical-align:top;white-space:nowrap;max-width:16rem;overflow:hidden;text-overflow:ellipsis}
+th{background:var(--bg);color:var(--muted);font-weight:600}
+.grid{overflow:auto;max-height:260px;border:1px solid var(--line);border-radius:6px}
+.grid tr.hdr td{background:var(--accent-bg);font-weight:600}
+.grid tr td:first-child{color:var(--muted);text-align:right;cursor:pointer}
+.grid tr td:first-child:hover{color:var(--accent);text-decoration:underline}
+.files{display:grid;gap:.4rem}
+.file{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;align-items:center;padding:.45rem .6rem;border:1px solid var(--line);border-radius:6px;background:#fff}
+.file.active{border-color:var(--accent);background:var(--accent-bg)}
+.file .meta{color:var(--muted);font-size:.78rem}
+.cols{display:grid;gap:.3rem}
+.col{display:grid;grid-template-columns:1.4rem minmax(0,1.3fr) minmax(0,1fr) 7rem 8rem 6rem auto;gap:.5rem;align-items:center;padding:.3rem .4rem;border-radius:6px}
+.col:nth-child(even){background:#fafbfc}
+.col .h{font-family:var(--mono);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col .sample{color:var(--muted);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col input[type=text],.col select{min-width:0;width:100%;padding:.2rem .4rem;font-size:.8rem}
+.col.used{outline:1px solid var(--ok);outline-offset:-1px}
+.col.alias{outline:1px dashed var(--warn);outline-offset:-1px}
+pre{margin:0;font:11.5px/1.4 var(--mono);white-space:pre;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:.6rem}
+.yaml-file{margin-bottom:.8rem}
+.yaml-file .name{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.8rem;font-weight:600;margin:.2rem 0}
+.status{margin:.5rem 0;padding:.5rem .7rem;border-radius:6px;font-size:.85rem;white-space:pre-wrap}
+.status.ok{background:var(--ok-bg);color:var(--ok)} .status.bad{background:var(--bad-bg);color:var(--bad)} .status.warn{background:var(--warn-bg);color:var(--warn)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.15rem .8rem;font-size:.82rem}
+.kv b{font-family:var(--mono);font-weight:500}
+details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.rail{display:flex;gap:.25rem;padding:.4rem 1rem;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:50px;z-index:4;overflow-x:auto}
+.rail button{background:#fff;color:var(--fg);border:1px solid var(--line);display:flex;align-items:center;gap:.45rem;white-space:nowrap}
+.rail button span{display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--line);font-size:.72rem}
+.rail button.on{border-color:var(--accent);background:var(--accent-bg)} .rail button.on span{background:var(--accent);color:#fff}
+.rail button.planned{color:var(--muted);border-style:dashed}
+.stage{padding:1rem 1.25rem;max-width:1100px}
+.planned-card{border-style:dashed;color:var(--muted)}
+.flow{padding-left:1.2rem} .flow li{margin:.3rem 0}
+.st-unchanged{color:var(--ok)} .st-changed{color:var(--warn);font-weight:600} .st-new{color:var(--accent);font-weight:600} .st-missing{color:var(--bad);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>PIM</h1>
+  <label class="inline">Brand <select id="loadSel"><option value="">— new brand —</option></select></label>
+  <button class="ghost small" id="loadBtn">Open</button>
+  <span class="sp"></span>
+  <span class="hint" id="repo"></span>
+</header>
+<nav class="rail">
+  <button data-stage="setup" class="on"><span>1</span>Brand &amp; files</button>
+  <button data-stage="status"><span>2</span>What changed</button>
+  <button data-stage="build"><span>3</span>Build</button>
+  <button data-stage="decide"><span>4</span>Decide</button>
+  <button data-stage="derive" class="planned" title="M2"><span>5</span>Derive &amp; review</button>
+  <button data-stage="publish" class="planned" title="M3–M5"><span>6</span>Publish</button>
+</nav>
+<div class="layout" id="stage-setup">
+<main>
+
+<h2><span class="n">1</span>Brand</h2>
+<div class="card">
+  <div class="row">
+    <label>Short name (folder + slug) <input type="text" id="slug" placeholder="pace-worldwide"></label>
+    <label>Display name <input type="text" id="display_name" placeholder="Pace Worldwide"></label>
+    <label>Brand name exactly as in BigCommerce <input type="text" id="bc_brand_name" placeholder="Pace Worldwide"></label>
+    <label>BigCommerce brand id (SKU prefix) <input type="number" id="brand_id" placeholder="blank until created in BC"></label>
+  </div>
+  <div class="row" style="margin-top:.6rem">
+    <label>Folder with this brand's files <input type="text" id="source_root" class="wide" placeholder="C:/Users/apole/OneDrive - Castletronics/.../Pace/Data to Merge"></label>
+    <button id="lsBtn">List files</button>
+  </div>
+  <p class="hint">The pipeline only reads from this folder. Use forward slashes. Each brand has its own.</p>
+</div>
+
+<h2><span class="n">2</span>Files</h2>
+<div class="card">
+  <div class="files" id="files"><span class="hint">List files to begin.</span></div>
+</div>
+<div class="card" id="fileCard" hidden>
+  <div class="row">
+    <label class="inline"><input type="checkbox" id="f_include"> Use this file</label>
+    <label>Source id <input type="text" id="f_id" style="min-width:4rem"></label>
+    <label id="sheetLbl">Sheet <select id="f_sheet"></select></label>
+    <label>Header row <input type="number" id="f_header_row" min="1" style="min-width:4rem"></label>
+    <label>Part-number column <select id="f_key"></select></label>
+    <label id="encLbl">Encoding <select id="f_encoding"><option>utf-8-sig</option><option>utf-8</option><option>cp1252</option><option>latin-1</option></select></label>
+    <label class="inline"><input type="checkbox" id="f_optional"> Optional (build goes on without it)</label>
+    <label class="inline"><input type="checkbox" id="f_multi"> Many rows per part number</label>
+  </div>
+  <p class="hint">Click a row number in the preview to set it as the header row. The part-number column is the one the file is lined up on.</p>
+  <div class="grid" id="preview"></div>
+  <div id="fileStatus"></div>
+</div>
+
+<h2><span class="n">3</span>Columns to keep <span class="hint" id="colsFor"></span></h2>
+<div class="card">
+  <p class="hint">Tick a column to bring it in and give it a name (letters, digits, underscores). To use a column as a <em>fallback</em> for a field you already named from another file, pick that field under "fallback for".</p>
+  <div class="cols" id="cols"><span class="hint">Pick a file above.</span></div>
+</div>
+
+<h2><span class="n">4</span>Roster and checks</h2>
+<div class="card">
+  <div class="row">
+    <label>Roster file (the list of products that counts) <select id="primary_source"></select></label>
+    <label>Expected product count <input type="number" id="roster_count" placeholder="leave blank to skip"></label>
+  </div>
+  <p class="hint">The roster file's part numbers define which products exist. Other files only add information to them. If the brand's price list uses different codes than its catalog, those code pairs go in <code>joins.yaml → associations</code> (editable later).</p>
+</div>
+
+<h2><span class="n">5</span>Save and check</h2>
+<div class="card">
+  <div class="actions">
+    <button class="ghost" id="validateBtn">Validate</button>
+    <button id="saveBtn">Save pack</button>
+    <button class="ghost" id="buildBtn">Build (dry run)</button>
+    <span class="hint">Save writes <code>brands/&lt;slug&gt;/</code>. Dry run reads your files and reports; it writes nothing.</span>
+  </div>
+  <div id="result"></div>
+</div>
+</main>
+
+<aside>
+  <div class="actions" style="margin-bottom:.5rem"><b style="font-size:.9rem">The YAML this will write</b><span class="sp" style="flex:1"></span><span class="tag acc" id="yamlState">live</span></div>
+  <div id="yaml"></div>
+</aside>
+</div>
+
+<section class="stage" id="stage-status" hidden>
+  <div class="card">
+    <div class="actions"><button id="statusBtn">Check files now</button><span class="hint">Re-reads every declared file and compares it with the fingerprint recorded by the last build.</span></div>
+    <div id="statusOut"></div>
+  </div>
+  <div class="card">
+    <b>How a change flows through</b>
+    <ol class="flow">
+      <li><b>A file changes</b> in the brand folder (new price book, corrected sheet, a scrape rerun).</li>
+      <li><b>What changed</b> shows it as <span class="tag warn">changed</span> or <span class="tag acc">new</span> — nothing has happened to your data yet.</li>
+      <li><b>Build</b> makes a new numbered version. Your overrides and decisions are re-applied on top; if a value you ruled on moved underneath, the build says so instead of guessing.</li>
+      <li><b>Compare</b> two builds to see exactly which products and fields changed, before → after.</li>
+      <li>Later: <b>Publish</b> shows the same diff against the live store before any write, and every run can be rolled back.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="stage" id="stage-build" hidden>
+  <div class="card">
+    <div class="actions"><button class="ghost" id="dryBtn">Dry run (writes nothing)</button><button id="realBuildBtn">Build</button><span class="hint">Build reads the files, applies overrides, stores a new version and its export.</span></div>
+    <div id="buildOut"></div>
+  </div>
+  <div class="card">
+    <div class="actions"><b>Versions</b><button class="ghost small" id="buildsBtn">Refresh</button><span class="sp" style="flex:1"></span><label class="inline">Compare <select id="diffA"></select> → <select id="diffB"></select></label><button class="small" id="diffBtn">Compare</button></div>
+    <div id="buildsOut"></div><div id="diffOut"></div>
+  </div>
+</section>
+
+<section class="stage" id="stage-decide" hidden>
+  <div class="card">
+    <b>Edit in Excel, bring it back safely</b>
+    <p class="hint">1. Export the fields you want to work on. 2. Open the CSV in Excel, change values, save as CSV. 3. Preview shows every change before anything is written. 4. Apply lands them as reversible overrides; the next Build carries them.</p>
+    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="name,book_list_price,book_net_price,esd_safe"></label><button id="csvExportBtn">Export CSV</button></div>
+    <div id="csvExportOut"></div>
+    <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview changes</button><button id="csvApplyBtn">Apply</button></div>
+    <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-10"></label></div>
+    <div id="csvOut"></div>
+  </div>
+  <div class="card planned-card"><b>Coming in M2 (spec A1):</b> carry / skip / hold per product, derivative pack sizes with their own SKUs, pricing rules with margin, fulfillment and quantity — all as columns on this same sheet, plus a grid view here if the sheet loop gets tiresome.</div>
+</section>
+
+<section class="stage" id="stage-derive" hidden>
+  <div class="card planned-card"><b>M2 — Derive &amp; review.</b> Facets (the filter values), the packed <code>filter_metadata</code> and <code>spec_display</code> strings with the 250-character halt, families, SEO titles and descriptions, cleaned HTML — computed from the catalog rows and shown here per product, with every value outside the frozen vocabulary flagged by name.</div>
+</section>
+
+<section class="stage" id="stage-publish" hidden>
+  <div class="card planned-card"><b>M3–M5 — Publish.</b> Snapshot the store → field-by-field diff of what would change → blast-radius check (too many rows, or all prices moving one way, asks for a typed confirmation) → staged write (10 products first) → read back and verify every field → roll back any run from its before-images. Terminus (Hub import door vs BigCommerce direct) per OQ-21.</div>
+</section>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { brand:{slug:"",display_name:"",bc_brand_name:"",brand_id:"",source_root:"",text_fixes:{}}, sources:[], fields:[], joins:{primary_source:"",key_rule:"trim-only",associations:[]}, expectations:{roster_count:""} };
+let files = [], current = null, inspectCache = {};
+
+async function api(path, body){ const r = await fetch(path,{method:body?"POST":"GET",headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}); return r.json(); }
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let yamlTimer; function renderYamlSoon(){ clearTimeout(yamlTimer); yamlTimer=setTimeout(renderYaml,250); }
+async function renderYaml(){
+  const r = await api("/api/render",{state});
+  $("#yaml").innerHTML = Object.entries(r.files||{}).map(([n,t])=>`<div class="yaml-file"><div class="name"><span>${n}</span><button class="ghost small" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(t)})">copy</button></div><pre>${esc(t)}</pre></div>`).join("");
+}
+
+// ---- brand inputs
+for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) {
+  $("#"+id).addEventListener("input", e => { state.brand[id]=e.target.value; if(id==="display_name" && !$("#bc_brand_name").value){ $("#bc_brand_name").placeholder=e.target.value; } renderYamlSoon(); });
+}
+$("#roster_count").addEventListener("input", e => { state.expectations.roster_count=e.target.value; renderYamlSoon(); });
+$("#primary_source").addEventListener("change", e => { state.joins.primary_source=e.target.value; renderYamlSoon(); });
+
+// ---- files
+$("#lsBtn").onclick = async () => {
+  const r = await api("/api/ls",{root:$("#source_root").value});
+  if (r.error) { $("#files").innerHTML = `<span class="tag bad">${esc(r.error)}</span>`; return; }
+  files = r.files;
+  for (const f of files) if (!state.sources.find(s=>s.path===f.path)) state.sources.push({include:false,id:"S"+(state.sources.length+1),path:f.path,format:f.format,sheet:null,header_row:1,key_column:"",key_index:null,optional:false,multi:false,flatten:[],encoding:"utf-8-sig"});
+  drawFiles();
+};
+function drawFiles(){
+  $("#files").innerHTML = state.sources.map((s,i)=>`<div class="file ${current===i?'active':''}" data-i="${i}">
+     <input type="checkbox" ${s.include?'checked':''} data-inc="${i}" title="use this file">
+     <div><div>${esc(s.path)}</div><div class="meta">${s.format}${s.sheet?' · '+esc(s.sheet):''}${s.key_column?' · key: '+esc(s.key_column):s.key_index?' · key: column #'+s.key_index:(s.blocks&&s.blocks.length)?' · '+s.blocks.length+' blocks (edit in sources.yaml)':''}${s.include?'':' · not used'}</div></div>
+     <span class="tag ${s.include?(s.key_column||s.key_index||(s.blocks&&s.blocks.length)?'ok':'warn'):'acc'}">${s.include?(s.key_column||s.key_index||(s.blocks&&s.blocks.length)?s.id:'needs key'):'skip'}</span></div>`).join("");
+  $("#files").querySelectorAll(".file").forEach(el=>el.onclick=e=>{ if(e.target.type==="checkbox")return; selectFile(+el.dataset.i); });
+  $("#files").querySelectorAll("input[data-inc]").forEach(el=>el.onchange=e=>{ state.sources[+el.dataset.inc].include=el.checked; if(el.checked) selectFile(+el.dataset.inc); drawFiles(); drawPrimary(); renderYamlSoon(); });
+  drawPrimary();
+}
+function drawPrimary(){
+  const inc = state.sources.filter(s=>s.include);
+  $("#primary_source").innerHTML = inc.map(s=>`<option value="${s.id}" ${state.joins.primary_source===s.id?'selected':''}>${s.id} — ${esc(s.path)}</option>`).join("");
+  if (!state.joins.primary_source && inc[0]) state.joins.primary_source = inc[0].id;
+}
+async function selectFile(i){
+  current = i; const s = state.sources[i]; if(!s.include){ s.include=true; }
+  $("#fileCard").hidden=false; $("#f_include").checked=s.include; $("#f_id").value=s.id; $("#f_header_row").value=s.header_row; $("#f_optional").checked=s.optional; $("#f_multi").checked=s.multi; $("#f_encoding").value=s.encoding||"utf-8-sig";
+  $("#sheetLbl").hidden = !(s.format==="xlsx"||s.format==="xlsm"); $("#encLbl").hidden = (s.format==="xlsx"||s.format==="xlsm");
+  await inspectCurrent(); drawFiles();
+}
+async function inspectCurrent(){
+  const s = state.sources[current];
+  const r = await api("/api/inspect",{root:state.brand.source_root,path:s.path,format:s.format,sheet:s.sheet,header_row:s.header_row,encoding:s.encoding});
+  if (r.error){ $("#preview").innerHTML=""; $("#fileStatus").innerHTML=`<div class="status bad">${esc(r.error)}</div>`; return; }
+  $("#fileStatus").innerHTML="";
+  inspectCache[s.id]=r;
+  if (r.sheets.length){ $("#f_sheet").innerHTML=r.sheets.map(n=>`<option ${n===r.sheet?'selected':''}>${esc(n)}</option>`).join(""); s.sheet=r.sheet; }
+  if (s.format==="json"){ s.header_row=1; s.flatten=r.nested||[]; }
+  const hdr=s.header_row;
+  $("#preview").innerHTML = `<table>${r.rows.map((row,ri)=>`<tr class="${ri+1===hdr?'hdr':''}"><td data-row="${ri+1}" title="use as header row">${ri+1}</td>${row.slice(0,40).map(c=>`<td title="${esc(c)}">${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+  $("#preview").querySelectorAll("td[data-row]").forEach(td=>td.onclick=()=>{ s.header_row=+td.dataset.row; $("#f_header_row").value=s.header_row; inspectCurrent(); });
+  const headers = r.headers;
+  const opts = headers.map((h,i)=>`<option value="${esc(h)}" ${h===s.key_column?'selected':''}>${h===''?'(blank header) — column #'+(i+1):esc(h)}</option>`).join("");
+  $("#f_key").innerHTML = `<option value="">— choose —</option>`+opts;
+  if (s.key_index){ $("#f_key").value = headers[s.key_index-1] ?? ""; }
+  drawCols(); renderYamlSoon();
+}
+$("#f_sheet").onchange = e => { state.sources[current].sheet=e.target.value; inspectCurrent(); };
+$("#f_header_row").onchange = e => { state.sources[current].header_row=+e.target.value||1; inspectCurrent(); };
+$("#f_encoding").onchange = e => { state.sources[current].encoding=e.target.value; inspectCurrent(); };
+$("#f_id").oninput = e => { const old=state.sources[current].id; state.sources[current].id=e.target.value.trim(); state.fields.forEach(f=>{ if(f.source===old) f.source=e.target.value.trim(); f.aliases.forEach(a=>{ if(a.source===old) a.source=e.target.value.trim(); }); }); if(state.joins.primary_source===old) state.joins.primary_source=e.target.value.trim(); drawFiles(); renderYamlSoon(); };
+$("#f_key").onchange = e => { const s=state.sources[current]; const h=inspectCache[s.id]?.headers||[]; const idx=e.target.selectedIndex-1; if (idx>=0 && h[idx]===""){ s.key_index=idx+1; s.key_column=""; } else { s.key_column=e.target.value; s.key_index=null; } drawFiles(); renderYamlSoon(); };
+$("#f_optional").onchange = e => { state.sources[current].optional=e.target.checked; renderYamlSoon(); };
+$("#f_multi").onchange = e => { state.sources[current].multi=e.target.checked; renderYamlSoon(); };
+$("#f_include").onchange = e => { state.sources[current].include=e.target.checked; drawFiles(); renderYamlSoon(); };
+
+// ---- columns -> fields
+function drawCols(){
+  const s = state.sources[current]; const r = inspectCache[s.id]; if(!r) return;
+  $("#colsFor").textContent = `— ${s.id}: ${s.path}`;
+  const sampleRow = r.rows[s.header_row] || [];
+  const others = state.fields.filter(f=>f.source!==s.id);
+  $("#cols").innerHTML = `<div class="col" style="font-size:.75rem;color:var(--muted)"><span></span><span>column in file</span><span>sample</span><span>name in PIM</span><span>type · unit</span><span>fallback for</span><span></span></div>` +
+    r.headers.map((h,i)=>{
+      if (h==="") return "";
+      const f = state.fields.find(x=>x.source===s.id && x.column===h);
+      const al = state.fields.find(x=>x.aliases.some(a=>a.source===s.id && a.column===h));
+      const unitGuess = (h.match(/\((mm|in|g|oz|kg|lb)\)/i)||[])[1]?.toLowerCase()||"";
+      return `<div class="col ${f?'used':''} ${al?'alias':''}" data-h="${esc(h)}">
+        <input type="checkbox" ${f?'checked':''} data-use="${esc(h)}" ${al?'disabled':''}>
+        <span class="h" title="${esc(h)}">${esc(h)}</span>
+        <span class="sample" title="${esc(sampleRow[i])}">${esc(sampleRow[i]??'')}</span>
+        <input type="text" data-name="${esc(h)}" value="${esc(f?f.name:'')}" placeholder="${esc(suggest(h))}" ${f?'':'disabled'}>
+        <span style="display:flex;gap:.25rem"><select data-type="${esc(h)}" ${f?'':'disabled'}>${["text","number","integer","bool","html","url"].map(t=>`<option ${f&&f.type===t?'selected':''}>${t}</option>`).join("")}</select><input type="text" data-unit="${esc(h)}" value="${esc(f?(f.column_unit||f.unit||''):unitGuess)}" placeholder="unit" style="width:3.6rem" ${f?'':'disabled'} title="unit the column carries (mm, in, g…) or a comma list of units found inside the values"></span>
+        <select data-alias="${esc(h)}" ${f?'disabled':''}><option value="">${al?'↳ '+esc(al.name):'—'}</option>${others.map(o=>`<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("")}</select>
+        <span style="display:flex;gap:.3rem;font-size:.75rem"><label class="inline" title="must be present for every product"><input type="checkbox" data-req="${esc(h)}" ${f&&f.required?'checked':''} ${f?'':'disabled'}>req</label><label class="inline" title="publish this field to the store"><input type="checkbox" data-conf="${esc(h)}" ${f&&f.confirmed?'checked':''} ${f?'':'disabled'}>publish</label></span>
+      </div>`;}).join("");
+  const C=$("#cols");
+  C.querySelectorAll("input[data-use]").forEach(el=>el.onchange=()=>{ const h=el.dataset.use; if(el.checked){ const unitGuess=(h.match(/\((mm|in|g|oz|kg|lb)\)/i)||[])[1]?.toLowerCase()||""; state.fields.push({name:uniqueName(suggest(h)),source:s.id,column:h,column_unit:unitGuess||null,type:"text",unit_mode:unitGuess?"declared":"none",unit:unitGuess,required:false,confirmed:false,aliases:[]}); } else { state.fields=state.fields.filter(x=>!(x.source===s.id&&x.column===h)); } drawCols(); renderYamlSoon(); });
+  C.querySelectorAll("input[data-name]").forEach(el=>el.onchange=()=>{ const f=fieldOf(s.id,el.dataset.name); if(f){ f.name=(el.value||suggest(el.dataset.name)).toLowerCase().replace(/[^a-z0-9_]+/g,"_").replace(/^_+|_+$/g,""); el.value=f.name; } renderYamlSoon(); });
+  C.querySelectorAll("select[data-type]").forEach(el=>el.onchange=()=>{ const f=fieldOf(s.id,el.dataset.type); if(f) f.type=el.value; renderYamlSoon(); });
+  C.querySelectorAll("input[data-unit]").forEach(el=>el.onchange=()=>{ const f=fieldOf(s.id,el.dataset.unit); if(!f) return; const u=el.value.trim(); if(!u){ f.unit_mode="none"; f.unit=""; f.column_unit=null; } else if(u.includes(",")){ f.unit_mode="in-value"; f.unit=u; f.column_unit=null; } else { f.unit_mode="declared"; f.unit=u; f.column_unit=u; } renderYamlSoon(); });
+  C.querySelectorAll("input[data-req]").forEach(el=>el.onchange=()=>{ const f=fieldOf(s.id,el.dataset.req); if(f) f.required=el.checked; renderYamlSoon(); });
+  C.querySelectorAll("input[data-conf]").forEach(el=>el.onchange=()=>{ const f=fieldOf(s.id,el.dataset.conf); if(f) f.confirmed=el.checked; renderYamlSoon(); });
+  C.querySelectorAll("select[data-alias]").forEach(el=>el.onchange=()=>{ const h=el.dataset.alias; state.fields.forEach(x=>x.aliases=x.aliases.filter(a=>!(a.source===s.id&&a.column===h))); if(el.value){ const t=state.fields.find(x=>x.name===el.value); const unitGuess=(h.match(/\((mm|in|g|oz|kg|lb)\)/i)||[])[1]?.toLowerCase()||null; t.aliases.push({source:s.id,column:h,unit:unitGuess}); } drawCols(); renderYamlSoon(); });
+}
+function fieldOf(sid,h){ return state.fields.find(x=>x.source===sid&&x.column===h); }
+function suggest(h){ let s=h.toLowerCase().replace(/^[a-z]{2}_[a-z]{2}#/,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,""); return s||"field"; }
+function uniqueName(n){ let k=n,i=2; while(state.fields.some(f=>f.name===k)) k=`${n}_${i++}`; return k; }
+
+// ---- save / validate / build
+function show(html, cls){ $("#result").innerHTML=`<div class="status ${cls}">${html}</div>`; }
+$("#validateBtn").onclick = async () => { const r=await api("/api/validate",{state}); show(r.ok?`Pack is valid — ${r.files_valid} files, ${r.warnings.length} note(s)`+(r.warnings.length?"\n"+r.warnings.map(esc).join("\n"):""):`${r.errors.length} problem(s):\n`+r.errors.map(esc).join("\n"), r.ok?"ok":"bad"); };
+$("#saveBtn").onclick = async () => {
+  let r = await api("/api/save",{state});
+  if (r.exists){ if(!window.confirm) return; const ok=await askOverwrite(r.exists); if(!ok) return show("Not saved.","warn"); r=await api("/api/save",{state,overwrite:true}); }
+  if (r.error) return show(esc(r.error),"bad");
+  show(`Saved ${r.written.length} files to ${esc(r.dir)}`+(r.errors.length?`\nValidation: ${r.errors.length} problem(s):\n`+r.errors.map(esc).join("\n"):"\nValidation: clean"), r.errors.length?"warn":"ok");
+  loadBrands();
+};
+function askOverwrite(list){ return new Promise(res=>{ show(`brands/${esc(state.brand.slug)} already has: ${list.join(", ")}. <button id="owY">Overwrite</button> <button class="ghost" id="owN">Cancel</button>`,"warn"); $("#owY").onclick=()=>res(true); $("#owN").onclick=()=>res(false); }); }
+$("#buildBtn").onclick = async () => {
+  show("Building (dry run)…","warn");
+  const r = await api("/api/build",{slug:state.brand.slug});
+  if (!r.ok) return show(`HALT:\n${esc(r.halt)}`,"bad");
+  const cov = Object.entries(r.coverage).map(([f,c])=>`<b>${esc(f)}</b><span>${c} / ${r.rows}</span>`).join("");
+  const asr = Object.entries(r.assertions).map(([k,a])=>`<span class="tag ${a.ok?'ok':'bad'}">${a.ok?'PASS':'FAIL'}</span> ${k}: measured ${esc(JSON.stringify(a.measured))} expected ${esc(JSON.stringify(a.expected))}`).join("<br>");
+  show(`Build ${esc(r.build_id)} — ${r.rows} products<br>${asr}<br>fallback-supplied values: ${r.alias_notes}<details><summary>coverage per field</summary><div class="kv">${cov}</div></details>`+(r.notes.length?`<details><summary>${r.notes.length} note(s)</summary><pre>${esc(r.notes.join("\n"))}</pre></details>`:""), "ok");
+};
+
+// ---- load existing
+async function loadBrands(){ const r=await api("/api/brands"); $("#repo").textContent=r.repo; $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
+$("#loadBtn").onclick = async () => {
+  const slug=$("#loadSel").value; if(!slug) return;
+  const r=await api("/api/load",{slug}); if(r.error) return show(esc(r.error),"bad");
+  Object.assign(state, r); for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value=state.brand[id]??""; $("#roster_count").value=state.expectations.roster_count??"";
+  current=null; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; drawFiles(); renderYaml();
+  show(`Opened brands/${esc(slug)}. Files declared with blocks are shown but edited in sources.yaml directly.`,"ok");
+};
+// ---- stages
+document.querySelectorAll(".rail button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".rail button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("[id^=stage-]").forEach(x=>x.hidden=true); $("#stage-"+b.dataset.stage).hidden=false; window.scrollTo(0,0); if(b.dataset.stage==="status") runStatus(); if(b.dataset.stage==="build") listBuilds(); });
+function slug(){ return state.brand.slug || $("#loadSel").value; }
+function out(id, html, cls){ $("#"+id).innerHTML = `<div class="status ${cls||''}">${html}</div>`; }
+async function runStatus(){
+  if(!slug()) return out("statusOut","Open a brand first (top bar).","warn");
+  const r = await api("/api/status",{slug:slug()}); if(r.error) return out("statusOut",esc(r.error),"bad");
+  const rows = r.sources.map(x=>`<tr><td class="st-${x.state}">${x.state}</td><td>${x.id}</td><td>${esc(x.path)}</td><td>${x.size??''}${x.state==='changed'?' (was '+x.was_size+')':''}</td><td>${x.sha256??''}</td></tr>`).join("");
+  const s=r.summary; const act = (s.changed||s.new) ? `<p><span class="tag warn">${s.changed} changed · ${s.new} new</span> — go to <b>Build</b> to make a new version, then compare it with ${esc(r.build_id||'')}.</p>` : (r.build_id?`<p><span class="tag ok">all ${s.unchanged} files unchanged</span> since build ${esc(r.build_id)} (${esc(r.built)})</p>`:`<p><span class="tag acc">no build yet</span></p>`);
+  $("#statusOut").innerHTML = act + `<table><tr><th>state</th><th>id</th><th>file</th><th>size</th><th>fingerprint</th></tr>${rows}</table>` + (s.missing?`<p class="status bad">${s.missing} file(s) missing — the build will halt unless they are marked optional.</p>`:"");
+}
+$("#statusBtn").onclick = runStatus;
+function buildReport(r){
+  if (!r.ok) return `<div class="status bad">HALT:\n${esc(r.halt)}</div>`;
+  const cov = Object.entries(r.coverage).map(([f,c])=>`<b>${esc(f)}</b><span>${c} / ${r.rows}</span>`).join("");
+  const asr = Object.entries(r.assertions).map(([k,a])=>`<span class="tag ${a.ok?'ok':'bad'}">${a.ok?'PASS':'FAIL'}</span> ${k}: measured ${esc(JSON.stringify(a.measured))} expected ${esc(JSON.stringify(a.expected))}`).join("<br>");
+  return `<div class="status ok">${r.written?'Built':'Dry run'} ${esc(r.build_id)} — ${r.rows} products, ${(r.overrides||[]).length} override(s) applied<br>${asr}<br>fallback-supplied values: ${r.alias_notes}<details><summary>coverage per field</summary><div class="kv">${cov}</div></details>`+(r.notes.length?`<details><summary>${r.notes.length} note(s)</summary><pre>${esc(r.notes.join("\n"))}</pre></details>`:"")+`</div>`;
+}
+$("#dryBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Dry run…","warn"); $("#buildOut").innerHTML = buildReport(await api("/api/build",{slug:slug()})); };
+$("#realBuildBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Building…","warn"); $("#buildOut").innerHTML = buildReport(await api("/api/build",{slug:slug(),write:true})); listBuilds(); };
+async function listBuilds(){
+  if(!slug()) return; const r = await api("/api/builds",{slug:slug()});
+  $("#buildsOut").innerHTML = r.builds.length ? `<table><tr><th>version</th><th>created</th><th>products</th></tr>${r.builds.map(b=>`<tr><td><code>${b.build_id}</code></td><td>${esc(b.created)}</td><td>${b.rows}</td></tr>`).join("")}</table>` : `<span class="hint">No builds yet.</span>`;
+  const opts = r.builds.map(b=>`<option>${b.build_id}</option>`).join(""); $("#diffA").innerHTML=opts; $("#diffB").innerHTML=opts; if(r.builds[1]) $("#diffA").value=r.builds[1].build_id;
+}
+$("#buildsBtn").onclick = listBuilds;
+$("#diffBtn").onclick = async()=>{
+  const r = await api("/api/diff",{slug:slug(),a:$("#diffA").value,b:$("#diffB").value}); if(r.error) return out("diffOut",esc(r.error),"bad");
+  const c=r.counts; const rows = Object.entries(r.changed).flatMap(([sku,fs])=>Object.entries(fs).map(([f,v])=>`<tr><td>${esc(sku)}</td><td>${esc(f)}</td><td>${esc(v.before??'')}</td><td>${esc(v.after??'')}</td></tr>`)).join("");
+  $("#diffOut").innerHTML = `<div class="status ${c.changed_rows||c.added||c.removed?'warn':'ok'}">${c.added} added · ${c.removed} removed · ${c.changed_rows} products changed (${c.changed_cells} cells) · ${c.unchanged_rows} unchanged</div>` + (r.added.length?`<p>Added: ${r.added.map(esc).join(", ")}</p>`:"") + (r.removed.length?`<p>Removed: ${r.removed.map(esc).join(", ")}</p>`:"") + (rows?`<table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${rows}</table>`:"");
+};
+$("#csvExportBtn").onclick = async()=>{ const r=await api("/api/export_csv",{slug:slug(),fields:$("#csvFields").value}); if(r.error) return out("csvExportOut",esc(r.error),"bad"); $("#csvPath").value=r.path; out("csvExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products × ${r.fields.length} fields, from build ${esc(r.build_id)}. Open it in Excel, edit, save as CSV.`,"ok"); };
+function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) across ${Object.keys(c.by_field).length} field(s) · ${c.damage} suspected damage · ${c.unknown_skus} unknown product(s) · ${c.unknown_columns} unknown column(s)`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Written: <code>${esc(r.written)}</code> — now run <b>Build</b> to apply.`:'')+`</div>`;
+  if (r.changes.length) h+=`<table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${r.changes.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td></tr>`).join("")}</table>`;
+  if (r.damage.length) h+=`<p class="status bad">Suspected spreadsheet damage (not applied):</p><table><tr><th>product</th><th>field</th><th>before</th><th>after</th><th>why</th></tr>${r.damage.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.suspected.join("; "))}</td></tr>`).join("")}</table>`;
+  if (r.unknown_columns.length) h+=`<p class="status bad">Unknown columns: ${r.unknown_columns.map(esc).join(", ")} — declare the field first.</p>`;
+  return h; }
+$("#csvPreviewBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
+$("#csvApplyBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value,apply:true,who:$("#csvWho").value,why:$("#csvWhy").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
+
+loadBrands(); renderYaml();
+</script>
+</body>
+</html>
