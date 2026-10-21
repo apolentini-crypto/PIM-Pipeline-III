@@ -66,6 +66,19 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 .stage{padding:1rem 1.25rem;max-width:1100px}
 .planned-card{border-style:dashed;color:var(--muted)}
 .flow{padding-left:1.2rem} .flow li{margin:.3rem 0}
+.guide{background:var(--accent-bg);border:1px solid #c9dbe9;border-radius:8px;padding:.7rem 1rem;margin:.5rem 0 .9rem;font-size:.9rem}
+.guide b{display:block;margin-bottom:.25rem}
+.guide ol{margin:.2rem 0 0;padding-left:1.2rem} .guide li{margin:.15rem 0}
+.help{display:inline-block;width:1rem;height:1rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.7rem;text-align:center;line-height:1rem;cursor:help;margin-left:.25rem;font-weight:700}
+.cap{color:var(--muted);font-size:.74rem;max-width:18rem;line-height:1.3}
+label>.cap{margin-top:.1rem}
+.ready{border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;margin-bottom:.8rem;background:#fff}
+.ready h3{margin:0 0 .35rem;font-size:.85rem}
+.ready ul{margin:0;padding-left:0;list-style:none;display:grid;gap:.2rem;font-size:.82rem}
+.ready li::before{content:"✓ ";color:var(--ok);font-weight:700}
+.ready li.todo::before{content:"○ ";color:var(--warn)}
+.ready li.todo{color:var(--warn)}
+.ready li.opt{color:var(--muted)} .ready li.opt::before{content:"– "}
 .st-unchanged{color:var(--ok)} .st-changed{color:var(--warn);font-weight:600} .st-new{color:var(--accent);font-weight:600} .st-missing{color:var(--bad);font-weight:600}
 </style>
 </head>
@@ -73,7 +86,7 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 <header>
   <h1>PIM</h1>
   <label class="inline">Brand <select id="loadSel"><option value="">— new brand —</option></select></label>
-  <button class="ghost small" id="loadBtn">Open</button>
+  <button class="ghost small" id="loadBtn" title="Open the selected brand, or start a new one">Open</button>
   <span class="sp"></span>
   <span class="hint" id="repo"></span>
 </header>
@@ -88,52 +101,70 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 <div class="layout" id="stage-setup">
 <main>
 
+<div class="guide"><b>What this stage does</b>
+It writes the brand's setup files (the YAML on the right). You answer five things, in order, and the checklist on the right tells you what is still missing.
+<ol>
+<li><b>Brand</b> — who it is and where its files live.</li>
+<li><b>Files</b> — which files to read, and for each one: the sheet, the row with the column headings, and the column holding the <em>part number</em> (the file is lined up on it).</li>
+<li><b>Columns to keep</b> — tick the columns you want and give each a name. Everything you don't tick is ignored.</li>
+<li><b>Roster</b> — which file's part-number list defines "the products". Other files only add information to those.</li>
+<li><b>Validate → Save pack</b>, then <b>Build (dry run)</b> to see coverage before anything is stored.</li>
+</ol></div>
 <h2><span class="n">1</span>Brand</h2>
 <div class="card">
   <div class="row">
-    <label>Short name (folder + slug) <input type="text" id="slug" placeholder="pace-worldwide"></label>
-    <label>Display name <input type="text" id="display_name" placeholder="Pace Worldwide"></label>
-    <label>Brand name exactly as in BigCommerce <input type="text" id="bc_brand_name" placeholder="Pace Worldwide"></label>
-    <label>BigCommerce brand id (SKU prefix) <input type="number" id="brand_id" placeholder="blank until created in BC"></label>
+    <label>Short name <input type="text" id="slug" placeholder="pace-worldwide"><span class="cap">Lowercase, dashes. Becomes the folder name <code>brands/&lt;name&gt;/</code>.</span></label>
+    <label>Display name <input type="text" id="display_name" placeholder="Pace Worldwide"><span class="cap">How it reads in reports and titles.</span></label>
+    <label>Brand name exactly as in BigCommerce <input type="text" id="bc_brand_name" placeholder="Pace Worldwide"><span class="cap">Must match the store's brand spelling; it is resolved to the brand id at load time.</span></label>
+    <label>BigCommerce brand id <input type="number" id="brand_id" placeholder="e.g. 59"><span class="cap">The SKU prefix (<code>59.RX8130</code>). Leave blank until the brand exists in BC — SKUs can't be built without it.</span></label>
   </div>
   <div class="row" style="margin-top:.6rem">
     <label>Folder with this brand's files <input type="text" id="source_root" class="wide" placeholder="C:/Users/apole/OneDrive - Castletronics/.../Pace/Data to Merge"></label>
     <button id="lsBtn">List files</button>
   </div>
-  <p class="hint">The pipeline only reads from this folder. Use forward slashes. Each brand has its own.</p>
+  <p class="hint">The pipeline only reads from this folder, never writes to it. Use forward slashes. Each brand has its own folder. Supported: .xlsx .xlsm .csv .json.</p>
 </div>
 
 <h2><span class="n">2</span>Files</h2>
 <div class="card">
+  <p class="hint" style="margin:0 0 .5rem">Tick the files to read. Click a file to set it up below. A green tag means it is ready; <span class="tag warn">needs key</span> means the part-number column is not chosen yet.</p>
   <div class="files" id="files"><span class="hint">List files to begin.</span></div>
 </div>
 <div class="card" id="fileCard" hidden>
   <div class="row">
     <label class="inline"><input type="checkbox" id="f_include"> Use this file</label>
-    <label>Source id <input type="text" id="f_id" style="min-width:4rem"></label>
-    <label id="sheetLbl">Sheet <select id="f_sheet"></select></label>
-    <label>Header row <input type="number" id="f_header_row" min="1" style="min-width:4rem"></label>
-    <label>Part-number column <select id="f_key"></select></label>
-    <label id="encLbl">Encoding <select id="f_encoding"><option>utf-8-sig</option><option>utf-8</option><option>cp1252</option><option>latin-1</option></select></label>
-    <label class="inline"><input type="checkbox" id="f_optional"> Optional (build goes on without it)</label>
-    <label class="inline"><input type="checkbox" id="f_multi"> Many rows per part number</label>
+    <label>Source id <input type="text" id="f_id" style="min-width:4rem"><span class="cap">Short tag used in the YAML (S1, S2…). Keep it.</span></label>
+    <label id="sheetLbl">Sheet <select id="f_sheet"></select><span class="cap">Which tab of the workbook.</span></label>
+    <label>Header row <input type="number" id="f_header_row" min="1" style="min-width:4rem"><span class="cap">The row with the column names. Usually 1; price books often 2.</span></label>
+    <label>Part-number column <select id="f_key"></select><span class="cap"><b>Required.</b> The column holding the manufacturer part number — every file is lined up on it.</span></label>
+    <label id="encLbl">Encoding <select id="f_encoding"><option>utf-8-sig</option><option>utf-8</option><option>cp1252</option><option>latin-1</option></select><span class="cap">Leave as is unless the preview shows odd characters; a CSV saved by Excel is often cp1252.</span></label>
+    <label class="inline" title="If the file is missing the build still runs and records a warning."><input type="checkbox" id="f_optional"> Optional</label>
+    <label class="inline" title="Tick when one part number appears on several rows (e.g. one row per image). Columns from such a file need a 'where' rule, set in fields.yaml."><input type="checkbox" id="f_multi"> Many rows per part number</label>
   </div>
-  <p class="hint">Click a row number in the preview to set it as the header row. The part-number column is the one the file is lined up on.</p>
+  <div id="blockNote" hidden class="status warn" style="margin:.4rem 0">This file is declared as side-by-side blocks (two tables on one sheet). Its key and column ranges are set in <code>sources.yaml</code> under <code>blocks:</code>; the window shows it but does not edit it.</div>
+  <p class="hint">Preview of the first rows. <b>Click a row number</b> to make it the header row; the chosen row is highlighted. Then pick the part-number column above.</p>
   <div class="grid" id="preview"></div>
   <div id="fileStatus"></div>
 </div>
 
 <h2><span class="n">3</span>Columns to keep <span class="hint" id="colsFor"></span></h2>
 <div class="card">
-  <p class="hint">Tick a column to bring it in and give it a name (letters, digits, underscores). To use a column as a <em>fallback</em> for a field you already named from another file, pick that field under "fallback for".</p>
+  <div class="guide" style="margin-top:0"><b>How to fill this in</b>
+  <ol>
+  <li><b>Tick</b> a column to keep it. A suggested name appears; change it if you like (letters, digits, underscores — this is the name you'll see everywhere after this).</li>
+  <li><b>Type</b>: <em>text</em> unless the column is a number, a true/false, HTML, or a web link. Numbers that are really codes (EANs, part numbers) stay <em>text</em> so leading zeros survive.</li>
+  <li><b>Unit</b>: if the column's heading says the unit (<code>Length (mm)</code>) it is filled in for you. If the unit is <em>inside the values</em> (<code>133.5 mm</code>, <code>4,72 in</code>) type the units it may contain, comma-separated: <code>mm,in</code>.</li>
+  <li><b>Fallback for</b>: the same information from a second file. Pick the field you already named; this column fills in only where that one is empty. If both have a value and they disagree, the build stops and shows you both.</li>
+  <li><b>req</b> = every product must have it (build stops otherwise). <b>publish</b> = send it to the store. Untick publish for working data you keep but don't list.</li>
+  </ol></div>
   <div class="cols" id="cols"><span class="hint">Pick a file above.</span></div>
 </div>
 
 <h2><span class="n">4</span>Roster and checks</h2>
 <div class="card">
   <div class="row">
-    <label>Roster file (the list of products that counts) <select id="primary_source"></select></label>
-    <label>Expected product count <input type="number" id="roster_count" placeholder="leave blank to skip"></label>
+    <label>Roster file <select id="primary_source"></select><span class="cap"><b>Required.</b> Its part-number list defines which products exist. Usually the catalog or category file, not the price list.</span></label>
+    <label>Expected product count <input type="number" id="roster_count" placeholder="leave blank to skip"><span class="cap">If you know how many products there should be, the build checks it and stops on a mismatch.</span></label>
   </div>
   <p class="hint">The roster file's part numbers define which products exist. Other files only add information to them. If the brand's price list uses different codes than its catalog, those code pairs go in <code>joins.yaml → associations</code> (editable later).</p>
 </div>
@@ -144,19 +175,21 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
     <button class="ghost" id="validateBtn">Validate</button>
     <button id="saveBtn">Save pack</button>
     <button class="ghost" id="buildBtn">Build (dry run)</button>
-    <span class="hint">Save writes <code>brands/&lt;slug&gt;/</code>. Dry run reads your files and reports; it writes nothing.</span>
+    <span class="hint"><b>Validate</b> checks the setup for mistakes. <b>Save pack</b> writes <code>brands/&lt;name&gt;/</code>. <b>Build (dry run)</b> reads your files and reports coverage; it stores nothing.</span>
   </div>
   <div id="result"></div>
 </div>
 </main>
 
 <aside>
+  <div class="ready"><h3>Before you can save and build</h3><ul id="ready"></ul></div>
   <div class="actions" style="margin-bottom:.5rem"><b style="font-size:.9rem">The YAML this will write</b><span class="sp" style="flex:1"></span><span class="tag acc" id="yamlState">live</span></div>
   <div id="yaml"></div>
 </aside>
 </div>
 
 <section class="stage" id="stage-status" hidden>
+  <div class="guide"><b>What this stage does</b> It answers "did any of the brand's files change since I last built?" Nothing happens to your data here. If something changed, go to <b>Build</b>.</div>
   <div class="card">
     <div class="actions"><button id="statusBtn">Check files now</button><span class="hint">Re-reads every declared file and compares it with the fingerprint recorded by the last build.</span></div>
     <div id="statusOut"></div>
@@ -174,6 +207,7 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 </section>
 
 <section class="stage" id="stage-build" hidden>
+  <div class="guide"><b>What this stage does</b> A build reads the files, lines every product up by part number, fills gaps from fallback columns, applies your overrides, and stores a numbered version. <b>Dry run</b> does all of that but stores nothing — use it first. Then <b>Compare</b> two versions to see exactly what changed. Every number shown is measured, and a FAIL names the product and field.</div>
   <div class="card">
     <div class="actions"><button class="ghost" id="dryBtn">Dry run (writes nothing)</button><button id="realBuildBtn">Build</button><span class="hint">Build reads the files, applies overrides, stores a new version and its export.</span></div>
     <div id="buildOut"></div>
@@ -185,6 +219,7 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 </section>
 
 <section class="stage" id="stage-decide" hidden>
+  <div class="guide"><b>What this stage does</b> This is where you change data by hand — prices, titles, anything — in Excel, and bring it back without Excel damage or silent overwrites. Your changes are stored as reversible overrides and re-applied on every future build; delete an override file to undo.</div>
   <div class="card">
     <b>Edit in Excel, bring it back safely</b>
     <p class="hint">1. Export the fields you want to work on. 2. Open the CSV in Excel, change values, save as CSV. 3. Preview shows every change before anything is written. 4. Apply lands them as reversible overrides; the next Build carries them.</p>
@@ -212,7 +247,22 @@ let files = [], current = null, inspectCache = {};
 
 async function api(path, body){ const r = await fetch(path,{method:body?"POST":"GET",headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}); return r.json(); }
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let yamlTimer; function renderYamlSoon(){ clearTimeout(yamlTimer); yamlTimer=setTimeout(renderYaml,250); }
+let yamlTimer; function renderYamlSoon(){ clearTimeout(yamlTimer); yamlTimer=setTimeout(renderYaml,250); readiness(); }
+function readiness(){
+  const items=[]; const b=state.brand; const inc=state.sources.filter(s=>s.include);
+  const add=(ok,txt,opt)=>items.push(`<li class="${ok?'':(opt?'opt':'todo')}">${txt}</li>`);
+  add(/^[a-z0-9][a-z0-9-]*$/.test(b.slug||""), b.slug?`Brand short name: ${esc(b.slug)}`:"Give the brand a short name");
+  add(!!b.source_root, b.source_root?"Files folder set":"Point at the folder with the brand's files");
+  add(inc.length>0, inc.length?`${inc.length} file(s) selected`:"Select at least one file");
+  for (const s of inc){ const ok=!!(s.key_column||s.key_index||(s.blocks&&s.blocks.length)); add(ok, ok?`${s.id} — part-number column set`:`${s.id} (${esc(s.path)}) — choose its part-number column`); }
+  add(!!state.joins.primary_source, state.joins.primary_source?`Roster file: ${esc(state.joins.primary_source)}`:"Choose the roster file");
+  add(state.fields.length>0, state.fields.length?`${state.fields.length} column(s) kept`:"Tick at least one column to keep");
+  add(state.fields.some(f=>f.required), state.fields.some(f=>f.required)?"A required field is set (e.g. the part number)":"Mark the part-number and title columns as required", true);
+  add(state.fields.some(f=>f.confirmed), state.fields.some(f=>f.confirmed)?`${state.fields.filter(f=>f.confirmed).length} field(s) marked publish`:"Mark the fields that go to the store as publish", true);
+  add(!!String(b.brand_id||"").trim(), b.brand_id?`BigCommerce brand id ${esc(b.brand_id)} (SKUs can be built)`:"BigCommerce brand id blank — fine for now; needed before SKUs/publishing", true);
+  $("#ready").innerHTML=items.join("");
+  const todo=items.filter(x=>x.includes('class="todo"')).length; $("#saveBtn").disabled=todo>0; $("#buildBtn").disabled=todo>0; $("#saveBtn").title=todo?`${todo} item(s) to finish first`:"";
+}
 async function renderYaml(){
   const r = await api("/api/render",{state});
   $("#yaml").innerHTML = Object.entries(r.files||{}).map(([n,t])=>`<div class="yaml-file"><div class="name"><span>${n}</span><button class="ghost small" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(t)})">copy</button></div><pre>${esc(t)}</pre></div>`).join("");
@@ -251,6 +301,7 @@ async function selectFile(i){
   current = i; const s = state.sources[i]; if(!s.include){ s.include=true; }
   $("#fileCard").hidden=false; $("#f_include").checked=s.include; $("#f_id").value=s.id; $("#f_header_row").value=s.header_row; $("#f_optional").checked=s.optional; $("#f_multi").checked=s.multi; $("#f_encoding").value=s.encoding||"utf-8-sig";
   $("#sheetLbl").hidden = !(s.format==="xlsx"||s.format==="xlsm"); $("#encLbl").hidden = (s.format==="xlsx"||s.format==="xlsm");
+  $("#blockNote").hidden = !(s.blocks&&s.blocks.length);
   await inspectCurrent(); drawFiles();
 }
 async function inspectCurrent(){
@@ -335,8 +386,17 @@ $("#buildBtn").onclick = async () => {
 
 // ---- load existing
 async function loadBrands(){ const r=await api("/api/brands"); $("#repo").textContent=r.repo; $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
+function resetState(){
+  Object.assign(state, { brand:{slug:"",display_name:"",bc_brand_name:"",brand_id:"",source_root:"",text_fixes:{}}, sources:[], fields:[], joins:{primary_source:"",key_rule:"trim-only",associations:[]}, expectations:{roster_count:""} });
+  files=[]; current=null; inspectCache={};
+  for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value="";
+  $("#roster_count").value=""; $("#files").innerHTML='<span class="hint">List files to begin.</span>'; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; $("#colsFor").textContent=""; $("#primary_source").innerHTML=""; $("#result").innerHTML="";
+  document.querySelector(".rail button[data-stage='setup']").click();
+  renderYaml(); readiness();
+}
 $("#loadBtn").onclick = async () => {
-  const slug=$("#loadSel").value; if(!slug) return;
+  const slug=$("#loadSel").value;
+  if(!slug){ resetState(); show("New brand — start with step 1: give it a short name and point at its folder, then List files.","ok"); $("#slug").focus(); return; }
   const r=await api("/api/load",{slug}); if(r.error) return show(esc(r.error),"bad");
   Object.assign(state, r); for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value=state.brand[id]??""; $("#roster_count").value=state.expectations.roster_count??"";
   current=null; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; drawFiles(); renderYaml();
@@ -382,7 +442,7 @@ function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'
 $("#csvPreviewBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
 $("#csvApplyBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value,apply:true,who:$("#csvWho").value,why:$("#csvWhy").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
 
-loadBrands(); renderYaml();
+loadBrands(); renderYaml(); readiness();
 </script>
 </body>
 </html>
