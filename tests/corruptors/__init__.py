@@ -104,3 +104,23 @@ def corrupt_key(ctx):
     dst, bad = _copy_pack(ctx, "bad-key")
     p = dst / "sources" / "products.csv"; p.write_text(p.read_text(encoding="utf-8") + "RX-100,Dup,,Oval,1\n")
     return bad
+
+
+@register_corruptor("G-DERIV")
+def corrupt_deriv(ctx):
+    dst, bad = _copy_pack(ctx, "bad-deriv")
+    (dst / "decisions").mkdir(exist_ok=True)
+    (dst / "decisions" / "decisions.csv").write_text("mpn,carry_state,hold_reason,fulfillment,initial_qty,price,who,when,why\nRX-100,carry,,,,,t,2026-10-20,x\n", encoding="utf-8")
+    (dst / "derivatives.csv").write_text("kind,parent_mpn,pack_qty,mpn,components,name,who,when,why\npack,RX-100,5,,,,t,2026-10-20,x\n", encoding="utf-8")
+    return bad
+
+
+@register_corruptor("G-SKU-UNIQUE")
+def corrupt_sku_unique(ctx):
+    """Two MPNs that normalise to the same SKU: 'RX-100' and 'rx-100'."""
+    dst, bad = _copy_pack(ctx, "bad-skuuniq")
+    p = dst / "sources" / "products.csv"; p.write_text(p.read_text(encoding="utf-8") + "rx-100,Dup Cutter,,Oval,1\n", encoding="utf-8")
+    (dst / "expectations.yaml").write_text("roster_count: 5\n", encoding="utf-8")
+    (dst / "decisions").mkdir(exist_ok=True)
+    (dst / "decisions" / "decisions.csv").write_text("mpn,carry_state,hold_reason,fulfillment,initial_qty,price,who,when,why\nRX-100,carry,,,,,t,2026-10-20,x\nrx-100,carry,,,,,t,2026-10-20,x\n", encoding="utf-8")
+    return bad

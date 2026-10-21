@@ -329,7 +329,18 @@ class PricingRule(Strict):
         return self
 
 
+class PricingFields(Strict):
+    cost: Optional[str] = Field(default=None, description="canonical field holding cost per each (e.g. book_net_price)")
+    list_price: Optional[str] = Field(default=None, description="canonical field holding list/MSRP per each (e.g. book_list_price)")
+    weight: Optional[str] = Field(default=None, description="canonical per-each weight field, multiplied for packs")
+    category: Optional[str] = Field(default=None, description="canonical field used for category-scoped pricing rules")
+    group: Optional[str] = Field(default=None, description="canonical field for plausibility grouping (INV-14), e.g. the L3 section; defaults to category")
+    name: str = Field(default="name", description="canonical title field, used to compose derivative names")
+
+
 class Pricing(Strict):
+    fields: PricingFields = Field(default_factory=PricingFields)
+    pack_name_suffix: str = Field(default=" — {qty}-pack", description="composed onto the parent name for pack derivatives (FR-169)")
     purchase_unit: Literal["each", "case"] = Field(default="each", description="A1 FR-146: 'each' = cost/price/weight are per unit; 'case' requires case_qty_field naming the per-case count column")
     case_qty_field: Optional[str] = Field(default=None, description="only when purchase_unit=case: canonical field holding units per case")
     rules: list[PricingRule] = Field(default_factory=list)

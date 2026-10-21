@@ -2,6 +2,9 @@
 # PACKAGE QTY column is the factory's inbound packaging and is never used — not for cost,
 # not for weight, not for derivatives. Book net = cost per each; book list = price per each.
 purchase_unit: each
+fields: { cost: book_net_price, list_price: book_list_price, weight: unit_weight_kg, category: category_l2, group: section_l3, name: name }
+pack_name_suffix: " — {qty}-pack"
+fulfillment_vocabulary: [stock, factory-order]
 rules:
   - { scope: default, basis: msrp-passthrough, basis_note: "gen-1: price = retail_price = 2026 List Price" }
 unpriced_means: price-hidden      # 2026-07-22 ruling: price 0 + is_price_hidden + availability disabled

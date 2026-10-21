@@ -1,5 +1,9 @@
+purchase_unit: each
+fields: { cost: cost, list_price: list_price, weight: weight_g, category: category, name: name }
 rules:
   - { scope: default, basis: msrp-passthrough, rounding: nearest-cent, basis_note: "fixture" }
-  - { scope: derivative, scope_value: "15AGWM.P10", basis: markup-on-cost, factor: 0.40, rounding: ".95", basis_note: "fixture" }
+  - { scope: derivative, scope_value: "RX-100.P5", basis: markup-on-cost, factor: 0.40, rounding: ".95", basis_note: "fixture" }
+  - { scope: category, scope_value: Tweezers, basis: discount-off-msrp, factor: 0.10, rounding: nearest-cent, basis_note: "fixture" }
 margin_floor_pct: 20
 unpriced_means: hold
+fulfillment_vocabulary: [stock, factory-order]

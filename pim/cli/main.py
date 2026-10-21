@@ -56,6 +56,10 @@ def cmd_build(args) -> int:
         print(f"  warn  {w}")
     alias_notes = [n for n in r.notes if "alias" in n]
     print(f"  alias-supplied values: {len(alias_notes)}" + (f" (e.g. {alias_notes[0]})" if alias_notes else ""))
+    if r.decide_counts:
+        print(f"  decide: {r.decide_counts} → catalog rows {len(r.catalog)} " + str({k: sum(1 for c in r.catalog.values() if c.kind == k) for k in ("original", "pack", "kit")}))
+        for n in [x for x in r.notes if x.startswith("PLAUSIBILITY") or x.startswith("kit ") or "decision for" in x][:10]:
+            print(f"  note  {n}")
     if r.export_path:
         ep = r.export_path
         try:
@@ -125,6 +129,102 @@ def cmd_import_csv(args) -> int:
 
 def _store():
     return load_store(STORE)
+
+
+def _models(brand):
+    rep = validate_pack(_pack(brand))
+    if not rep.ok:
+        print("HALT: " + "; ".join(str(e) for e in rep.errors)); return None
+    return rep.models
+
+
+def cmd_export_decisions(args) -> int:
+    """FR-171: the decision sheet — one row per MPN with the decision columns + helpful context."""
+    import csv
+    from pim.build import build
+    from pim.decide.core import decision_sheet_rows, load_decisions, load_derivatives
+    from pim.normalize.core import HaltError
+    m = _models(args.brand)
+    if m is None: return 1
+    try:
+        r = build(_pack(args.brand), VAR, write=False)
+    except HaltError as e:
+        print(f"HALT: {e}"); return 1
+    extra = [f for f in (args.fields or "").split(",") if f.strip()]
+    header, rows = decision_sheet_rows(r.rows, load_decisions(_pack(args.brand)), load_derivatives(_pack(args.brand)), m["pricing.yaml"], extra)
+    out = Path(args.out) if args.out else VAR / args.brand / "edits" / f"{args.brand}-decisions.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.writer(fh, quoting=csv.QUOTE_ALL, lineterminator="\r\n"); w.writerow(header); w.writerows(rows)
+    counts = {}
+    for row in rows: counts[row[1]] = counts.get(row[1], 0) + 1
+    print(f"wrote {out} ({len(rows)} products). carry states: {counts}")
+    print("Edit the first 9 columns only (mpn is the key). Columns starting with '—' are context and are ignored on import.")
+    return 0
+
+
+def cmd_import_decisions(args) -> int:
+    import csv, datetime as dt
+    from pim.decide.core import diff_decisions, load_decisions, write_decisions
+    from pim.build import build
+    from pim.normalize.core import HaltError
+    try:
+        r = build(_pack(args.brand), VAR, write=False)
+    except HaltError as e:
+        print(f"HALT: {e}"); return 1
+    with Path(args.file).open("r", encoding="utf-8-sig", newline="") as fh:
+        sheet = list(csv.DictReader(fh))
+    d = diff_decisions(load_decisions(_pack(args.brand)), sheet, set(r.rows))
+    c = d["counts"]
+    print(f"decision changes: {c['changes']} across {len(c['by_field'])} column(s); {c['unknown']} unknown MPN(s); {c['errors']} error(s)")
+    for ch in d["changes"][:40]:
+        print(f"  ~ {ch['mpn']}.{ch['field']}: {ch['before']!r} -> {ch['after']!r}" + (f"  ERROR {ch['error']}" if "error" in ch else ""))
+    if d["unknown_mpns"]: print(f"  unknown: {d['unknown_mpns'][:20]}")
+    if not args.apply:
+        print("dry run — nothing written. Add --apply to save these decisions."); return 0
+    if d["errors"]:
+        print("REFUSED: fix the errors above first"); return 1
+    if not d["changes"]:
+        print("no changes — nothing to apply"); return 0
+    when = dt.datetime.now().date().isoformat()
+    for ch in d["changes"]:
+        nd = d["new_decisions"][ch["mpn"]]
+        if not nd.who: nd.who = args.who
+        if not nd.when: nd.when = when
+        if not nd.why: nd.why = args.why or f"decision sheet {Path(args.file).name}"
+    p = write_decisions(_pack(args.brand), d["new_decisions"])
+    print(f"wrote {p} — run: pim build {args.brand}")
+    return 0
+
+
+def cmd_seed_decisions(args) -> int:
+    """One-time: derive starting carry states from fields already in the build (declared on the command line)."""
+    from pim.build import build
+    from pim.decide.core import Decision, load_decisions, write_decisions
+    from pim.normalize.core import HaltError
+    import datetime as dt
+    try:
+        r = build(_pack(args.brand), VAR, write=False)
+    except HaltError as e:
+        print(f"HALT: {e}"); return 1
+    cur = load_decisions(_pack(args.brand))
+    if cur and not args.force:
+        print(f"{len(cur)} decisions already exist; use --force to overwrite"); return 1
+    when = dt.datetime.now().date().isoformat()
+    out = {}; counts = {}
+    for mpn, row in r.rows.items():
+        state, reason = "undecided", ""
+        if args.carry_if and args.carry_if in row.fields and row.fields[args.carry_if].value:
+            state = "carry"
+        if args.hold_if:
+            f, _, v = args.hold_if.partition("=")
+            if f in row.fields and row.fields[f].value == v:
+                state, reason = "carry", f"{f}={v}"
+        out[mpn] = Decision(mpn, state, reason, "", "", "", args.who, when, f"seeded: carry_if={args.carry_if} hold_if={args.hold_if}")
+        counts[state + (" (held)" if reason else "")] = counts.get(state + (" (held)" if reason else ""), 0) + 1
+    p = write_decisions(_pack(args.brand), out)
+    print(f"wrote {p}: {counts}")
+    return 0
 
 
 def cmd_ui(args) -> int:
@@ -226,6 +326,15 @@ def main(argv=None) -> int:
     p = sub.add_parser("import-csv", help="diff an edited sheet against the build; --apply lands overrides (FR-138/139)")
     p.add_argument("brand"); p.add_argument("file"); p.add_argument("--apply", action="store_true")
     p.add_argument("--who", default="operator"); p.add_argument("--why"); p.set_defaults(fn=cmd_import_csv)
+
+    p = sub.add_parser("export-decisions", help="decision sheet: one row per MPN (A1 FR-171)")
+    p.add_argument("brand"); p.add_argument("--fields", help="extra context columns"); p.add_argument("-o", "--out"); p.set_defaults(fn=cmd_export_decisions)
+    p = sub.add_parser("import-decisions", help="diff an edited decision sheet; --apply saves decisions/decisions.csv")
+    p.add_argument("brand"); p.add_argument("file"); p.add_argument("--apply", action="store_true"); p.add_argument("--who", default="operator"); p.add_argument("--why"); p.set_defaults(fn=cmd_import_decisions)
+    p = sub.add_parser("seed-decisions", help="one-time starting carry states from existing fields")
+    p.add_argument("brand"); p.add_argument("--carry-if", help="field that, when non-empty, means carry (e.g. bc_product_id_live)")
+    p.add_argument("--hold-if", help="field=value that marks a carried row as held (e.g. scrape_status=error_404)")
+    p.add_argument("--who", default="operator"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_seed_decisions)
 
     p = sub.add_parser("ui", help="open the PIM window in your browser (local only)")
     p.add_argument("--port", type=int, default=8766); p.add_argument("--no-browser", action="store_true"); p.set_defaults(fn=cmd_ui)

@@ -17,8 +17,8 @@ from pim.config.loader import PackReport, validate_pack
 from pim.ingest.readers import IngestError, RawFrame, SourceStamp, read_source
 from pim.normalize.core import CanonicalRow, HaltError, Merger, encoding_issues, resolve_field
 from pim.normalize.overrides import apply_overrides, load_overrides
-from pim.store.db import open_db, write_build
-from pim.store.export import write_export
+from pim.store.db import open_db, write_build, write_catalog
+from pim.store.export import write_export, write_catalog_export
 
 
 @dataclass
@@ -32,6 +32,8 @@ class BuildResult:
     notes: list[str]
     assertions: dict[str, dict]          # name -> {"measured":..., "expected":..., "ok":...}
     applied_overrides: list[str]
+    catalog: dict = field(default_factory=dict)          # sku -> CatalogRow (Stage 2b)
+    decide_counts: dict = field(default_factory=dict)
     export_path: Path | None = None
     rows_sha256: str | None = None
     manifest: dict = field(default_factory=dict)
@@ -124,6 +126,20 @@ def build(pack_dir: Path, var_dir: Path, *, source_root_override: Path | None = 
     coverage = {f: sum(1 for r in rows.values() if f in r.fields) for f in fields}
     assertions["COVERAGE"] = {"measured": coverage, "expected": None, "ok": True}
 
+    # ---- Stage 2b: DECIDE (A1) — only when the pack declares pricing.yaml and the brand has an id
+    catalog = {}
+    decide_counts = {}
+    if m.get("pricing.yaml") is not None:
+        from pim.decide.core import decide
+        from pim.config.loader import load_store
+        from pim.util.sku import SkuGrammar
+        store_path = Path(__file__).resolve().parents[1] / "store" / "store.yaml"
+        dres = decide(rows, pack_dir, brand, m["pricing.yaml"], SkuGrammar.from_store(load_store(store_path)), held)
+        catalog = dres.catalog
+        decide_counts = dres.counts
+        notes.extend(dres.notes)
+        assertions.update(dres.assertions)
+
     # ---- build id (deterministic over inputs — NFR-1)
     h = hashlib.sha256()
     for st in stamps:
@@ -139,7 +155,8 @@ def build(pack_dir: Path, var_dir: Path, *, source_root_override: Path | None = 
         "assertions": assertions, "warnings": warnings,
     }
     failed = [k for k, a in assertions.items() if not a["ok"]]
-    res = BuildResult(brand.slug, build_id, rows, held, stamps, warnings, notes, assertions, applied, manifest=manifest)
+    manifest["catalog_rows"] = len(catalog); manifest["carry_counts"] = decide_counts
+    res = BuildResult(brand.slug, build_id, rows, held, stamps, warnings, notes, assertions, applied, catalog=catalog, decide_counts=decide_counts, manifest=manifest)
     if failed:
         det = "; ".join(f"{k}: measured {assertions[k]['measured']} expected {assertions[k]['expected']} {assertions[k].get('details', '')[:5] if isinstance(assertions[k].get('details'), list) else ''}" for k in failed)
         raise HaltError(f"BUILD HALT — failed assertions {failed}: {det}")
@@ -151,4 +168,11 @@ def build(pack_dir: Path, var_dir: Path, *, source_root_override: Path | None = 
         con.close()
         res.export_path, res.rows_sha256 = write_export(var_dir / brand.slug / "exports" / build_id, flat, held, manifest)
         manifest["rows_sha256"] = res.rows_sha256
+        if catalog:
+            cflat = {sku: {f: (fv.value, fv.unit, fv.prov.kind, fv.prov.ref) for f, fv in r.fields.items()} for sku, r in catalog.items()}
+            cmeta = {sku: {"mpn": r.mpn, "kind": r.kind, "parent_mpn": r.parent_mpn, "pack_qty": r.pack_qty, "held": r.held, "price_basis": r.price_basis, "unpriced": r.unpriced, "margin_pct": r.margin_pct} for sku, r in catalog.items()}
+            con = open_db(var_dir / brand.slug / "pim.db")
+            write_catalog(con, build_id, cflat, cmeta)
+            con.close()
+            write_catalog_export(var_dir / brand.slug / "exports" / build_id, cflat, cmeta)
     return res

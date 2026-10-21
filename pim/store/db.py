@@ -16,6 +16,13 @@ CREATE TABLE IF NOT EXISTS rows(
 CREATE TABLE IF NOT EXISTS field_values(
   build_id TEXT, sku TEXT, field TEXT, value TEXT, unit TEXT, prov_kind TEXT, prov_ref TEXT,
   PRIMARY KEY(build_id, sku, field));
+CREATE TABLE IF NOT EXISTS catalog_rows(
+  build_id TEXT, sku TEXT, mpn TEXT, kind TEXT, parent_mpn TEXT, pack_qty INTEGER,
+  held TEXT, price_basis TEXT, unpriced INTEGER, margin_pct REAL,
+  PRIMARY KEY(build_id, sku));                    -- A1 §4
+CREATE TABLE IF NOT EXISTS catalog_values(
+  build_id TEXT, sku TEXT, field TEXT, value TEXT, unit TEXT, prov_kind TEXT, prov_ref TEXT,
+  PRIMARY KEY(build_id, sku, field));
 CREATE TABLE IF NOT EXISTS families(
   build_id TEXT, family_key TEXT, position INTEGER, sku TEXT,
   PRIMARY KEY(build_id, family_key, position));
@@ -62,6 +69,25 @@ def write_build(con: sqlite3.Connection, build_id: str, created: str, tool_versi
                         [(build_id, sku, 1 if sku in held else 0, held.get(sku)) for sku in sorted(rows)])
         con.executemany("INSERT INTO field_values VALUES(?,?,?,?,?,?,?)",
                         [(build_id, sku, f, v, u, pk, pr) for sku in sorted(rows) for f, (v, u, pk, pr) in sorted(rows[sku].items())])
+
+
+def write_catalog(con: sqlite3.Connection, build_id: str, rows: dict, meta: dict) -> None:
+    with con:
+        con.execute("DELETE FROM catalog_rows WHERE build_id=?", (build_id,))
+        con.execute("DELETE FROM catalog_values WHERE build_id=?", (build_id,))
+        con.executemany("INSERT INTO catalog_rows VALUES(?,?,?,?,?,?,?,?,?,?)",
+                        [(build_id, sku, m["mpn"], m["kind"], m["parent_mpn"], m["pack_qty"], m["held"], m["price_basis"], 1 if m["unpriced"] else 0, m["margin_pct"]) for sku, m in sorted(meta.items())])
+        con.executemany("INSERT INTO catalog_values VALUES(?,?,?,?,?,?,?)",
+                        [(build_id, sku, f, v, u, pk, pr) for sku in sorted(rows) for f, (v, u, pk, pr) in sorted(rows[sku].items())])
+
+
+def read_catalog(con: sqlite3.Connection, build_id: str) -> tuple[dict, dict]:
+    rows: dict = {}; meta: dict = {}
+    for sku, f, v, u, pk, pr in con.execute("SELECT sku, field, value, unit, prov_kind, prov_ref FROM catalog_values WHERE build_id=? ORDER BY sku, field", (build_id,)):
+        rows.setdefault(sku, {})[f] = (v, u, pk, pr)
+    for sku, mpn, kind, parent, qty, held, basis, unpriced, margin in con.execute("SELECT sku, mpn, kind, parent_mpn, pack_qty, held, price_basis, unpriced, margin_pct FROM catalog_rows WHERE build_id=?", (build_id,)):
+        meta[sku] = {"mpn": mpn, "kind": kind, "parent_mpn": parent, "pack_qty": qty, "held": held, "price_basis": basis, "unpriced": bool(unpriced), "margin_pct": margin}
+    return rows, meta
 
 
 def read_build(con: sqlite3.Connection, build_id: str) -> dict:

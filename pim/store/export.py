@@ -59,3 +59,19 @@ def diff_exports(a: dict[str, dict], b: dict[str, dict]) -> dict:
     return {"added": added, "removed": removed, "changed": changed,
             "counts": {"added": len(added), "removed": len(removed), "changed_rows": len(changed), "changed_cells": n_cells,
                        "unchanged_rows": len(set(a) & set(b)) - len(changed)}}
+
+
+def write_catalog_export(out_dir: Path, rows: dict, meta: dict) -> Path:
+    """catalog.jsonl — one line per CT SKU (Stage 2b output), same determinism rules as rows.jsonl."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    p = out_dir / "catalog.jsonl"
+    lines = []
+    for sku in sorted(rows):
+        m = meta[sku]
+        obj = {"sku": sku, "mpn": m["mpn"], "kind": m["kind"], "parent_mpn": m["parent_mpn"], "pack_qty": m["pack_qty"], "held": m["held"] or False,
+               "price_basis": m["price_basis"], "unpriced": m["unpriced"],
+               "margin_pct": (round(m["margin_pct"], 2) if m["margin_pct"] is not None else None),
+               "fields": {f: {"v": v, **({"u": u} if u else {}), "p": f"{pk}:{pr}"} for f, (v, u, pk, pr) in sorted(rows[sku].items())}}
+        lines.append(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+    p.write_bytes(("\n".join(lines) + "\n").encode("utf-8"))
+    return p

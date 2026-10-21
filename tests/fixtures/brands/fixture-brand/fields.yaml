@@ -5,3 +5,6 @@ fields:
   length_mm:  { primary: { source: S1, column: "Length" }, aliases: [{ source: S2, column: "Total length" }], unit: { parse: in-value, expect: [mm, in] }, alias_tolerance: "2%", type: number }
   list_price: { primary: { source: S2, column: "2026 List" }, type: number, confirmed: "Y" }
   head_type:  { primary: { source: S1, column: "Head Type" } }
+  cost:       { primary: { source: S2, column: "Cost" }, type: number }
+  category:   { primary: { source: S2, column: "Category" } }
+  weight_g:   { primary: { source: S2, column: "Weight g" }, type: number, unit: { parse: declared, unit: g } }

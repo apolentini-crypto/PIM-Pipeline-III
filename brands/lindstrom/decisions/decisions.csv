@@ -1,0 +1,323 @@
+mpn,carry_state,hold_reason,fulfillment,initial_qty,price,who,when,why
+100FDMS-LND,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+331A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+6151,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+6152,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+6152SS,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+6159,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+6258,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7154TC2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7190,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7191,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7290,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7291,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7292,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7292G,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7293,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7490,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7590,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7591,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7890,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7891,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7892,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7893,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7893K,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+7894,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+800-1.5-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+800-2-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+800-2.5-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+800-3-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+801-0-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+801-00-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+801-1-75ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+801-7ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-10-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-15-75ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-20-75ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-6-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-7-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-7ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-8-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+803-9-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+805-TS1-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+805-TS4-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+805-TS5-50ESD,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+80FDMS-LND,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+813,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8130,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8131,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8132,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8137,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8138,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+814,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8140,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8140M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8141,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8142,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8142PS,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8143,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8144,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8145,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8146,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8147,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8148,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8149,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8150,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8150J,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8150M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8150SK,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8151,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8152,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8153,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8154,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8155,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+816,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8160,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8160J,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8160M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8161,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8162,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8163,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8164,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8165,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8167L_,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+8248Q,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9060,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9061,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9855,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9857,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9858,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9859,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9860,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9861,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9862,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+9863,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+BAH8147,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+BAH8156,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+BAH8157,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+BAH8158,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+BAH8168,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+CC170,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+CC230,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+EDGE-LAUNCH1,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7280,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7285,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7290,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7590,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7890,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7891,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7892,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-7893,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8130,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8131,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8132,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8133,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8134,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8135,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8136,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8137,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8138,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8140,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8141,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8142,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8143,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8144,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8145,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8148,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8150,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8160,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8161,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8162,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8163,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8166,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8167,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8168,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8247,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS-8248,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS6000,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS6001,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS7490,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS8151,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS8152,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+HS8164,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+MAL500-1D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+MAL500-2D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+MAL500-3D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+MSEF,carry+derivatives,,,,,Tony,2026-10-20,example: spatulas sold single and as pack/kit
+MSF,carry+derivatives,,,,,Tony,2026-10-20,example: spatulas sold single and as pack/kit
+MSL,carry+derivatives,,,,,Tony,2026-10-20,example: spatulas sold single and as pack/kit
+MSM,carry+derivatives,,,,,Tony,2026-10-20,example: spatulas sold single and as pack/kit
+P6160,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+PS501-1D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+PS501-2D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+PS501-3D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+PS501-4D,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX 8151BPS,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-7490,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-7590,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-7891,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-7893,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-7894,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8130,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8131,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8132,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8140,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8141,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8143,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8144,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8145,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8146,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8147,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8148,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8149,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8150,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8151,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8152,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8158,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8160,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8161,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8164,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8248,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX7390,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX7392,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX7890,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX7892,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8000,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8137,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8138,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8140M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8142,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8147PS,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8150M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8153,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8154,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8155,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8156,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8157,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8160BPS,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8160M2,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8162,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8165,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8211,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8233A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8234A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8237A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX8247,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+SP8000,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+SP8160,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 000-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00B-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 00D-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 0C9-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 1-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 1-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 124-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 14A-GW,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15A-C,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15A-GW,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15A-RW,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15AGW,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 15AGWHM-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 242ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 242CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 249 ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 249CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259 ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259 CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259ACP,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259ASV,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259CPR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 259SVR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 29-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2A-SA-TC,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2AB-SA-TC,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 2ACFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 31-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 34A-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3C-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3C-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3C-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 3C-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 4-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 475-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 51S-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 578-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 582-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5A-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5ACP,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5ASV,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5AX-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5B-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5CF-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5CPR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 5SVR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 6-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 648-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 649-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 65A-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 71MZ-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7A-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7A-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7A-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7ACF,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7ACP,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7ASV,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7CFR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7CPR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL 7SVR-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AA-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AA-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AA-SA-FT,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AA-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AA-SA-TC,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL AC-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-2-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-2A-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-3-S,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-4-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-5-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL M-OOD-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL MM-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 103-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 104-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 105-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 107-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 108-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 109-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 110-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 111-SA,carry,scrape_status=error_404,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 115-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM 117-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM106-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM116-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SM116-SA-ET,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SS-SA,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TL SS-SA-SL,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+TRX-8180A,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404

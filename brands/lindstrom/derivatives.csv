@@ -1,1 +1,3 @@
-parent_mpn,pack_qty,name,basis
+kind,parent_mpn,pack_qty,mpn,components,name,who,when,why
+pack,MSF,5,,,,Tony,2026-10-20,example: spatulas sell better as a 5-pack
+kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,"Carbon Fiber Micro Spatula Set, 5 pc (ESD safe handles)",Tony,2026-10-20,example: a selection of spatulas as one product

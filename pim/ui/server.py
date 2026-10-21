@@ -373,6 +373,77 @@ def csv_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
     return rep
 
 
+def decision_sheet(slug: str, fields: list[str]) -> dict:
+    import csv
+    from pim.build import build
+    from pim.decide.core import decision_sheet_rows, load_decisions, load_derivatives
+    from pim.normalize.core import HaltError
+    pack = BRANDS / slug
+    rep = validate_pack(pack)
+    if not rep.ok:
+        return {"error": "; ".join(str(e) for e in rep.errors)}
+    try:
+        r = build(pack, _var(), write=False)
+    except HaltError as e:
+        return {"error": str(e)}
+    header, rows = decision_sheet_rows(r.rows, load_decisions(pack), load_derivatives(pack), rep.models["pricing.yaml"], fields)
+    out = _var() / slug / "edits" / f"{slug}-decisions.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.writer(fh, quoting=csv.QUOTE_ALL, lineterminator="\r\n"); w.writerow(header); w.writerows(rows)
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row[1]] = counts.get(row[1], 0) + 1
+    return {"path": str(out), "rows": len(rows), "counts": counts, "preview": rows[:12], "header": header}
+
+
+def decision_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
+    import csv, datetime as dt
+    from pim.build import build
+    from pim.decide.core import diff_decisions, load_decisions, write_decisions
+    from pim.normalize.core import HaltError
+    pack = BRANDS / slug
+    try:
+        r = build(pack, _var(), write=False)
+    except HaltError as e:
+        return {"error": str(e)}
+    p = Path(path)
+    if not p.exists():
+        return {"error": f"file not found: {path}"}
+    with p.open("r", encoding="utf-8-sig", newline="") as fh:
+        sheet = list(csv.DictReader(fh))
+    d = diff_decisions(load_decisions(pack), sheet, set(r.rows))
+    res = {"changes": d["changes"][:300], "unknown": d["unknown_mpns"][:50], "counts": d["counts"]}
+    if apply:
+        if d["errors"]:
+            res["refused"] = "fix the errors first"
+        elif not d["changes"]:
+            res["refused"] = "no changes — nothing to apply"
+        else:
+            when = dt.datetime.now().date().isoformat()
+            for ch in d["changes"]:
+                nd = d["new_decisions"][ch["mpn"]]
+                nd.who = nd.who or (who or "operator"); nd.when = nd.when or when; nd.why = nd.why or (why or f"decision sheet {p.name}")
+            res["written"] = str(write_decisions(pack, d["new_decisions"]))
+    return res
+
+
+def catalog_view(slug: str) -> dict:
+    from pim.store.db import latest_build_id, open_db, read_catalog
+    con = open_db(_var() / slug / "pim.db"); bid = latest_build_id(con)
+    if not bid:
+        return {"error": "no build yet"}
+    rows, meta = read_catalog(con, bid); con.close()
+    out = []
+    for sku in sorted(rows):
+        f = rows[sku]; m = meta[sku]
+        g = lambda k: f.get(k, ("",))[0]
+        out.append({"sku": sku, "kind": m["kind"], "mpn": m["mpn"], "name": g("name")[:80], "price": g("price"), "basis": m["price_basis"],
+                    "margin": (f"{m['margin_pct']:.1f}" if m["margin_pct"] is not None else ""), "held": m["held"] or "", "fulfillment": g("fulfillment"), "qty": g("initial_qty")})
+    kinds = {k: sum(1 for r in out if r["kind"] == k) for k in ("original", "pack", "kit")}
+    return {"build_id": bid, "rows": out[:500], "total": len(out), "kinds": kinds, "held": sum(1 for r in out if r["held"]), "unpriced": sum(1 for m in meta.values() if m["unpriced"])}
+
+
 def run_build(slug: str, write: bool) -> dict:
     from pim.build import build
     from pim.normalize.core import HaltError
@@ -384,6 +455,7 @@ def run_build(slug: str, write: bool) -> dict:
         return {"ok": False, "halt": f"{type(e).__name__}: {e}"}
     cov = r.assertions.get("COVERAGE", {}).get("measured", {})
     return {"ok": True, "rows": len(r.rows), "build_id": r.build_id, "written": write, "overrides": r.applied_overrides,
+            "decide_counts": r.decide_counts, "catalog_rows": len(r.catalog),
             "assertions": {k: {"ok": a["ok"], "measured": a["measured"], "expected": a["expected"]} for k, a in r.assertions.items() if k != "COVERAGE"},
             "coverage": cov, "warnings": r.warnings, "alias_notes": len([n for n in r.notes if "alias" in n]),
             "notes": [n for n in r.notes if "alias" not in n][:40]}
@@ -434,6 +506,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(list_builds(body.get("slug", "")))
             elif path == "/api/diff":
                 self._json(diff_builds(body.get("slug", ""), body.get("a", ""), body.get("b", "")))
+            elif path == "/api/decision_sheet":
+                self._json(decision_sheet(body.get("slug", ""), [f for f in (body.get("fields") or "").split(",") if f.strip()]))
+            elif path == "/api/decision_import":
+                self._json(decision_import(body.get("slug", ""), body.get("path", ""), bool(body.get("apply")), body.get("who", ""), body.get("why", "")))
+            elif path == "/api/catalog":
+                self._json(catalog_view(body.get("slug", "")))
             elif path == "/api/export_csv":
                 self._json(csv_export(body.get("slug", ""), [f for f in (body.get("fields") or "").split(",") if f.strip()], body.get("out")))
             elif path == "/api/import_csv":

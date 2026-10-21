@@ -102,3 +102,19 @@ class GKeyUnique:
 
 for _c in (GRoster(), GRequired(), GEncoding(), GAliasConflict(), GOverrideStale(), GKeyUnique()):
     register_check(_c)
+
+
+@dataclass
+class GDeriv:
+    id: str = "G-DERIV"; requirement: str = "A1 FR-146/148"
+    def measure(self, ctx): return _build_measure(self.id, ctx, "G-DERIV")
+
+
+@dataclass
+class GSkuUnique:
+    id: str = "G-SKU-UNIQUE"; requirement: str = "A1 FR-152"
+    def measure(self, ctx): return _build_measure(self.id, ctx, "G-SKU-UNIQUE")
+
+
+for _c in (GDeriv(), GSkuUnique()):
+    register_check(_c)
