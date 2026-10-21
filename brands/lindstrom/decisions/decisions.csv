@@ -98,7 +98,7 @@ BAH8157,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=sc
 BAH8158,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 BAH8168,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 CC170,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
-CC230,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+CC230,skip,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 EDGE-LAUNCH1,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 HS-7280,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 HS-7285,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
@@ -158,7 +158,7 @@ RX-7590,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=sc
 RX-7891,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 RX-7893,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 RX-7894,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
-RX-8130,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
+RX-8130,carry,,,,99.00,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 RX-8131,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 RX-8132,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404
 RX-8140,carry,,,,,Tony,2026-10-20,seeded: carry_if=bc_product_id_live hold_if=scrape_status=error_404

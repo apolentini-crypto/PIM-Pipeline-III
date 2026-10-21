@@ -62,3 +62,16 @@ def test_source_status_reports_change(tmp_path, monkeypatch):
     p.write_text(p.read_text(encoding="utf-8").replace("110.00", "115.00"), encoding="utf-8")
     st = source_status("fixture-brand")
     assert st["summary"]["changed"] == 1 and [s["id"] for s in st["sources"] if s["state"] == "changed"] == ["S2"]
+
+
+def test_sheet_import_refuses_blank_or_missing_path_politely(tmp_path):
+    """Walk snag 2026-10-20: a blank path reached pathlib and surfaced as a raw ValueError."""
+    from pim.ui.server import _check_sheet_path
+    assert "no file given" in _check_sheet_path("")["error"]
+    assert "no file given" in _check_sheet_path("   ")["error"]
+    assert "file not found" in _check_sheet_path(str(tmp_path / "nope.csv"))["error"]
+    assert "folder" in _check_sheet_path(str(tmp_path))["error"]
+    x = tmp_path / "sheet.xlsx"; x.write_bytes(b"")
+    assert ".csv" in _check_sheet_path(str(x))["error"]
+    c = tmp_path / "sheet.csv"; c.write_text("mpn\n", encoding="utf-8")
+    assert _check_sheet_path(str(c)) is None

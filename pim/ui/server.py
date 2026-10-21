@@ -327,19 +327,45 @@ def source_status(slug: str) -> dict:
 def list_builds(slug: str) -> dict:
     from pim.store.db import open_db
     con = open_db(_var() / slug / "pim.db")
-    rows = [{"build_id": b, "created": c, "rows": n} for b, c, n in con.execute("SELECT build_id, created, row_count FROM builds ORDER BY created DESC")]
+    rows = [{"build_id": b, "created": c, "rows": n,
+             "catalog_rows": con.execute("SELECT count(*) FROM catalog_rows WHERE build_id=?", (b,)).fetchone()[0]}
+            for b, c, n in con.execute("SELECT build_id, created, row_count FROM builds ORDER BY created DESC")]
     con.close()
     return {"builds": rows}
 
 
 def diff_builds(slug: str, a: str, b: str) -> dict:
-    from pim.store.export import diff_exports, read_export
-    ea = _var() / slug / "exports" / a / "rows.jsonl"; eb = _var() / slug / "exports" / b / "rows.jsonl"
-    if not ea.exists() or not eb.exists():
+    """Two diffs: products (canonical rows, one per vendor part number) and catalog (one per CT SKU,
+    which is where decisions, packs, kits and prices show up)."""
+    from pim.store.export import diff_catalogs, diff_exports, read_catalog_export, read_export
+    if not a or not b:
+        return {"error": "pick two versions to compare"}
+    da, db = _var() / slug / "exports" / a, _var() / slug / "exports" / b
+    if not (da / "rows.jsonl").exists() or not (db / "rows.jsonl").exists():
         return {"error": "export not found for one of the builds"}
-    d = diff_exports(read_export(ea), read_export(eb))
+    d = diff_exports(read_export(da / "rows.jsonl"), read_export(db / "rows.jsonl"))
     d["changed"] = dict(list(d["changed"].items())[:300])
+    if (da / "catalog.jsonl").exists() and (db / "catalog.jsonl").exists():
+        c = diff_catalogs(read_catalog_export(da / "catalog.jsonl"), read_catalog_export(db / "catalog.jsonl"))
+        c["changed"] = dict(list(c["changed"].items())[:300])
+        d["catalog"] = c
+    else:
+        d["catalog"] = None
     return d
+
+
+def _check_sheet_path(path: str) -> dict | None:
+    """Friendly refusals before any file is touched: blank path, missing file, not a CSV."""
+    if not (path or "").strip():
+        return {"error": "no file given — paste the path of the edited CSV (the Export button fills it in for you)"}
+    p = Path(path.strip())
+    if not p.exists():
+        return {"error": f"file not found: {path}"}
+    if p.is_dir():
+        return {"error": f"that is a folder, not a CSV file: {path}"}
+    if p.suffix.lower() != ".csv":
+        return {"error": f"expected a .csv file (save it from Excel as 'CSV UTF-8'): {p.name}"}
+    return None
 
 
 def csv_export(slug: str, fields: list[str], out: str | None) -> dict:
@@ -358,6 +384,10 @@ def csv_export(slug: str, fields: list[str], out: str | None) -> dict:
 def csv_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
     from pim.store.csv_io import import_csv, write_overrides
     from pim.store.db import latest_build_id, open_db, read_build
+    bad = _check_sheet_path(path)
+    if bad:
+        return bad
+    path = path.strip()
     con = open_db(_var() / slug / "pim.db"); bid = latest_build_id(con)
     if not bid:
         return {"error": "no build yet"}
@@ -405,13 +435,14 @@ def decision_import(slug: str, path: str, apply: bool, who: str, why: str) -> di
     from pim.decide.core import diff_decisions, load_decisions, write_decisions
     from pim.normalize.core import HaltError
     pack = BRANDS / slug
+    bad = _check_sheet_path(path)
+    if bad:
+        return bad
+    p = Path(path.strip())
     try:
         r = build(pack, _var(), write=False)
     except HaltError as e:
         return {"error": str(e)}
-    p = Path(path)
-    if not p.exists():
-        return {"error": f"file not found: {path}"}
     with p.open("r", encoding="utf-8-sig", newline="") as fh:
         sheet = list(csv.DictReader(fh))
     d = diff_decisions(load_decisions(pack), sheet, set(r.rows))
@@ -521,15 +552,42 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(csv_import(body.get("slug", ""), body.get("path", ""), bool(body.get("apply")), body.get("who", ""), body.get("why", "")))
             elif path == "/api/suggest":
                 self._json({"name": suggest_name(body.get("header", ""))})
+            elif path == "/api/shutdown":
+                # local-only: a newer PIM window asks this one to stop (PIM.bat restart)
+                self._json({"stopping": True})
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
             else:
                 self._json({"error": "not found"}, 404)
         except Exception as e:
             self._json({"error": f"{type(e).__name__}: {e}"}, 500)
 
 
+def _stop_previous(port: int) -> bool:
+    import urllib.request, time, socket
+    try:
+        urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/api/shutdown", data=b"{}", headers={"Content-Type": "application/json"}), timeout=3).read()
+    except Exception:
+        return False
+    for _ in range(40):
+        time.sleep(0.25)
+        with socket.socket() as s:
+            if s.connect_ex(("127.0.0.1", port)) != 0:
+                return True
+    return False
+
+
 def serve(port: int = 8766, open_browser: bool = True) -> None:
-    srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    from pim import __version__
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    except OSError:
+        print(f"A PIM window is already running on port {port} — asking it to stop ...")
+        if not _stop_previous(port):
+            print(f"Could not stop it. Close the other PIM console window, then run PIM.bat again.")
+            return
+        srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = f"http://127.0.0.1:{port}/"
+    print(f"PIM v{__version__}")
     print(f"PIM window: {url}   (close this console window to stop)")
     if open_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()

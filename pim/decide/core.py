@@ -168,10 +168,16 @@ def _fmt(x: Decimal) -> str:
     return s or "0"
 
 
+def _money(x: Decimal) -> str:
+    """Prices always carry two decimals ('99.00', '419.95') — the store's own format, and it
+    keeps a hand-set 99 and a rule-made 99.00 from looking like a change."""
+    return f"{x.quantize(Decimal('0.01'), ROUND_HALF_UP):f}"
+
+
 def resolve_price(row: CatalogRow, decision: Optional[Decision], pricing: Pricing, cost: Optional[Decimal], list_price: Optional[Decimal], category: str) -> None:
     """FR-154..157. Sets row.fields['price'] with provenance, row.price_basis, row.unpriced, row.margin_pct."""
     def set_price(val: Decimal, basis: str):
-        row.fields["price"] = FieldValue(_fmt(val), Provenance("derived", basis))
+        row.fields["price"] = FieldValue(_money(val), Provenance("derived", basis))
         row.price_basis = basis
         if cost is not None and val:
             row.margin_pct = float((val - cost) / val * 100)
@@ -360,9 +366,11 @@ def decide(rows: dict[str, CanonicalRow], pack_dir: Path, brand: Brand, pricing:
     assertions = {
         "G-DECIDED": {"measured": counts["undecided"], "expected": "0 before publish", "ok": True, "details": [f"{counts['undecided']} undecided of {len(rows)}"]},
         "G-SKU-UNIQUE": {"measured": len(catalog), "expected": len(catalog), "ok": True},
-        "G-PRICE": {"measured": len(unpriced), "expected": 0, "ok": True, "details": unpriced[:50]},
+        # counts, not verdicts: a string `expected` marks a gate that is informational at build
+        # time and only becomes a hard stop at publish (A1 §3.9)
+        "G-PRICE": {"measured": len(unpriced), "expected": "0 before publish", "ok": True, "details": unpriced[:50]},
         "G-DERIV": {"measured": len(deriv_errors), "expected": 0, "ok": not deriv_errors, "details": deriv_errors},
-        "MARGIN-FLOOR": {"measured": len(below_floor), "expected": 0, "ok": True, "details": below_floor[:50]},
+        "MARGIN-FLOOR": {"measured": len(below_floor), "expected": "report only", "ok": True, "details": below_floor[:50]},
     }
     return DecideResult(catalog, decisions, derivatives, counts, assertions, notes)
 

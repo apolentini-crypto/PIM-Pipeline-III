@@ -37,9 +37,9 @@ def test_carry_builds_sku_price_and_margin(pack, tmp_path):
     r = build(pack, tmp_path / "var")
     assert set(r.catalog) == {"99.RX-100", "99.TL15A-GW"}            # D-8 grammar; skip and undecided absent
     c = r.catalog["99.RX-100"]
-    assert c.fields["price"].value == "100.5" and c.price_basis == "rule:default:msrp-passthrough" and round(c.margin_pct, 1) == 40.3
+    assert c.fields["price"].value == "100.50" and c.price_basis == "rule:default:msrp-passthrough" and round(c.margin_pct, 1) == 40.3
     t = r.catalog["99.TL15A-GW"]
-    assert t.fields["price"].value == "121.5" and t.price_basis.startswith("rule:category:discount-off-msrp")   # 135 × 0.9, category rule beats default
+    assert t.fields["price"].value == "121.50" and t.price_basis.startswith("rule:category:discount-off-msrp")   # 135 × 0.9, category rule beats default
     assert c.fields["ct_sku"].prov.kind == "derived"
 
 
@@ -57,7 +57,7 @@ def test_unpriced_row_is_held_when_declared(pack, tmp_path):
     _decide(pack, {"HS-200": "carry"})
     r = build(pack, tmp_path / "var")
     c = r.catalog["99.HS-200"]
-    assert c.fields["price"].value == "110"          # msrp passthrough works even with no cost
+    assert c.fields["price"].value == "110.00"        # msrp passthrough works even with no cost
     p = pack / "sources" / "prices.csv"; p.write_text(p.read_text(encoding="utf-8").replace("HS-200,110.00", "HS-200,"), encoding="utf-8")
     r = build(pack, tmp_path / "var")
     c = r.catalog["99.HS-200"]
@@ -98,7 +98,7 @@ def test_kit_sums_components_and_has_its_own_sku(pack, tmp_path):
     assert k.kind == "kit" and k.fields["cost"].value == "176" and k.fields["weight_g"].value == "206"   # 60 + 2×58 ; 70 + 2×68
     assert k.fields["name"].value == "Cutter Set 3 pc" and k.fields["kit_components"].value == "RX-100:1;RX-101:2"
     assert k.fields["mpn"].value == "CUT-SET" and "ean" not in k.fields
-    assert k.fields["price"].value == "296.5"     # msrp passthrough on summed list 100.5 + 2×98
+    assert k.fields["price"].value == "296.50"    # msrp passthrough on summed list 100.5 + 2×98
 
 
 def test_kit_with_unknown_component_fails_gate(pack, tmp_path):
@@ -140,3 +140,22 @@ def test_decision_sheet_diff_and_write(pack, tmp_path):
     p = write_decisions(pack, {k: v for k, v in d["new_decisions"].items() if k != "HS-200"})
     assert load_decisions(pack)["RX-101"].carry_state == "skip"
     assert set(CARRY_STATES) == {"undecided", "carry", "skip", "derivatives-only", "carry+derivatives"}
+
+
+def test_catalog_diff_sees_a_decision_change_the_product_diff_cannot():
+    """Walk snag 2026-10-20: skipping a product or hand-setting a price changed nothing in rows.jsonl,
+    so 'What changed' reported 0. The catalog diff must show it (FR-42 applied to CT SKUs)."""
+    from pim.store.export import diff_catalogs, diff_exports
+    before = {"99.A": {"sku": "99.A", "kind": "original", "held": False, "price_basis": "rule:default:msrp-passthrough", "unpriced": False,
+                       "parent_mpn": None, "pack_qty": None, "fields": {"price": {"v": "100.00"}, "name": {"v": "A"}}},
+              "99.B": {"sku": "99.B", "kind": "original", "held": False, "price_basis": "rule:default:msrp-passthrough", "unpriced": False,
+                       "parent_mpn": None, "pack_qty": None, "fields": {"price": {"v": "50.00"}, "name": {"v": "B"}}}}
+    after = {"99.A": {**before["99.A"], "price_basis": "decision:A", "fields": {"price": {"v": "99.00"}, "name": {"v": "A"}}}}
+    d = diff_catalogs(before, after)
+    assert d["removed"] == ["99.B"]
+    assert d["changed"]["99.A"]["price"] == {"before": "100.00", "after": "99.00"}
+    assert d["changed"]["99.A"]["_price_basis"]["after"] == "decision:A"
+    assert d["counts"] == {"added": 0, "removed": 1, "changed_rows": 1, "changed_cells": 2, "unchanged_rows": 0}
+    # the product-level diff of the same canonical rows is silent — that is the whole point
+    rows = {"A": {"sku": "A", "fields": {"name": {"v": "A"}}, "held": False}, "B": {"sku": "B", "fields": {"name": {"v": "B"}}, "held": False}}
+    assert diff_exports(rows, rows)["counts"]["changed_rows"] == 0

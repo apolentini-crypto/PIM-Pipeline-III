@@ -43,7 +43,9 @@ def _pack_hash(pack_dir: Path) -> str:
     h = hashlib.sha256()
     for p in sorted(pack_dir.rglob("*")):
         if p.is_file() and not p.name.startswith("."):
-            h.update(p.relative_to(pack_dir).as_posix().encode()); h.update(p.read_bytes())
+            # line endings are normalised so the same pack gives the same build id on Windows
+            # (git autocrlf, Excel-saved CSV) and elsewhere; content bytes otherwise untouched
+            h.update(p.relative_to(pack_dir).as_posix().encode()); h.update(p.read_bytes().replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 

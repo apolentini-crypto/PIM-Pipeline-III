@@ -51,7 +51,10 @@ def cmd_build(args) -> int:
             cov = a["measured"]; n = len(r.rows)
             print("  coverage: " + ", ".join(f"{f}={c}/{n}" for f, c in cov.items()))
         else:
-            print(f"  [{'PASS' if a['ok'] else 'FAIL'}] {k}: measured {a['measured']} expected {a['expected']}")
+            if isinstance(a["expected"], str):  # a count reported now, enforced at publish
+                print(f"  [INFO] {k}: {a['measured']} — {a['expected']}")
+            else:
+                print(f"  [{'PASS' if a['ok'] else 'FAIL'}] {k}: measured {a['measured']} expected {a['expected']}")
     for w in r.warnings:
         print(f"  warn  {w}")
     alias_notes = [n for n in r.notes if "alias" in n]
@@ -71,16 +74,24 @@ def cmd_build(args) -> int:
 
 
 def cmd_diff(args) -> int:
-    from pim.store.export import diff_exports, read_export
-    a = read_export(VAR / args.brand / "exports" / args.build_a / "rows.jsonl")
-    b = read_export(VAR / args.brand / "exports" / args.build_b / "rows.jsonl")
-    d = diff_exports(a, b)
-    print(json.dumps(d["counts"]))
-    for sku in d["added"][:20]: print(f"  + {sku}")
-    for sku in d["removed"][:20]: print(f"  - {sku}")
-    for sku, fs in list(d["changed"].items())[:40]:
-        for f, c in fs.items():
-            print(f"  ~ {sku}.{f}: {c['before']!r} -> {c['after']!r}")
+    from pim.store.export import diff_catalogs, diff_exports, read_export
+    da, db = VAR / args.brand / "exports" / args.build_a, VAR / args.brand / "exports" / args.build_b
+
+    def show(d: dict) -> None:
+        print("  " + json.dumps(d["counts"]))
+        for sku in d["added"][:20]: print(f"  + {sku}")
+        for sku in d["removed"][:20]: print(f"  - {sku}")
+        for sku, fs in list(d["changed"].items())[:40]:
+            for f, c in fs.items():
+                print(f"  ~ {sku}.{f}: {c['before']!r} -> {c['after']!r}")
+
+    print("products (one per vendor part number):")
+    show(diff_exports(read_export(da / "rows.jsonl"), read_export(db / "rows.jsonl")))
+    if (da / "catalog.jsonl").exists() and (db / "catalog.jsonl").exists():
+        print("catalog (one per CT SKU — decisions, packs, kits, prices):")
+        show(diff_catalogs(read_export(da / "catalog.jsonl"), read_export(db / "catalog.jsonl")))
+    else:
+        print("catalog: no catalog export for one of the builds")
     return 0
 
 

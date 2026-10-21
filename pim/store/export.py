@@ -61,6 +61,40 @@ def diff_exports(a: dict[str, dict], b: dict[str, dict]) -> dict:
                        "unchanged_rows": len(set(a) & set(b)) - len(changed)}}
 
 
+CATALOG_META_KEYS = ("kind", "held", "price_basis", "unpriced", "parent_mpn", "pack_qty")
+
+
+def read_catalog_export(path: Path) -> dict[str, dict]:
+    return read_export(path)
+
+
+def diff_catalogs(a: dict[str, dict], b: dict[str, dict]) -> dict:
+    """Stage 2b diff — one row per CT SKU. Compares field values AND the decision-level facts
+    (held, price basis, unpriced, kind, pack qty), so a changed decision is visible even when no
+    canonical value moved (FR-42 applied to the catalog)."""
+    added = sorted(set(b) - set(a))
+    removed = sorted(set(a) - set(b))
+    changed = {}
+    for sku in sorted(set(a) & set(b)):
+        ra, rb = a[sku], b[sku]
+        diffs = {}
+        for k in CATALOG_META_KEYS:
+            if ra.get(k) != rb.get(k):
+                diffs[f"_{k}"] = {"before": ra.get(k), "after": rb.get(k)}
+        fa, fb = ra["fields"], rb["fields"]
+        for f in sorted(set(fa) | set(fb)):
+            va = fa.get(f, {}).get("v")
+            vb = fb.get(f, {}).get("v")
+            if va != vb:
+                diffs[f] = {"before": va, "after": vb}
+        if diffs:
+            changed[sku] = diffs
+    n_cells = sum(len(d) for d in changed.values())
+    return {"added": added, "removed": removed, "changed": changed,
+            "counts": {"added": len(added), "removed": len(removed), "changed_rows": len(changed), "changed_cells": n_cells,
+                       "unchanged_rows": len(set(a) & set(b)) - len(changed)}}
+
+
 def write_catalog_export(out_dir: Path, rows: dict, meta: dict) -> Path:
     """catalog.jsonl — one line per CT SKU (Stage 2b output), same determinism rules as rows.jsonl."""
     out_dir.mkdir(parents=True, exist_ok=True)

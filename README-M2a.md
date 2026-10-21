@@ -58,3 +58,16 @@ MSL (160 g vs 1.3 g median) and 3 others.
 A form for derivatives and pricing rules in the window (CSV/YAML today) · customs columns on the sheet (A1 §3.6,
 M2b) · field overrides on derived rows (overrides apply to canonical rows; pack/kit names and prices come from
 derivatives.csv and the sheet).
+
+## Operator walk, 2026-10-20 — snags found and fixed
+1. Readiness checklist (and the Save/Build buttons) were stale after **Open** — now refreshed on open.
+2. `G-PRICE`, `G-DECIDED`, `MARGIN-FLOOR` showed as **PASS … expected 0** while measuring 29 — they are
+   counts the build reports and Publish enforces; shown as **INFO** now (window and CLI).
+3. Preview/Apply in *What changed* with a blank path returned a raw `ValueError: WindowsPath('.')` —
+   blank, missing, folder and non-CSV paths now get a plain-English refusal (both sheet importers).
+4. Prices showed `99` for a hand-set 99 and `99.00` from rules — prices now always carry two decimals.
+5. **Compare** only diffed the canonical rows, so skipping CC230 and repricing RX-8130 reported *0 changed*.
+   Compare (and `pim diff`) now show two diffs: **Products** (one per vendor MPN) and **Catalog** (one per
+   CT SKU — decisions, packs, kits, prices, held). Versions table shows catalog row counts.
+6. Build ids differed between machines for the same pack (CRLF) — pack hash is now line-ending-insensitive.
+7. The two Preview/Apply pairs (field sheet vs decision sheet) looked alike — relabelled *Preview decisions / Apply decisions* and *Preview field edits / Apply as overrides*.

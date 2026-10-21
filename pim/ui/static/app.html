@@ -225,7 +225,7 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
     <p class="hint">1. Export the sheet. 2. Open it in Excel and change the first nine columns (columns starting with "—" are context and are ignored). 3. Preview shows every change. 4. Apply saves the decisions. 5. Build.</p>
     <div class="row"><label>Extra context columns <input type="text" id="decFields" class="wide" placeholder="ean,section_l3,unit_weight_kg"></label><button id="decExportBtn">Export decision sheet</button></div>
     <div id="decExportOut"></div>
-    <div class="row" style="margin-top:.8rem"><label>Edited sheet path <input type="text" id="decPath" class="wide"></label><button class="ghost" id="decPreviewBtn">Preview changes</button><button id="decApplyBtn">Apply</button></div>
+    <div class="row" style="margin-top:.8rem"><label>Edited sheet path <input type="text" id="decPath" class="wide"></label><button class="ghost" id="decPreviewBtn">Preview decisions</button><button id="decApplyBtn">Apply decisions</button></div>
     <div class="row"><label>Who <input type="text" id="decWho" placeholder="Tony"></label><label>Why <input type="text" id="decWhy" class="wide" placeholder="range review 2026-10"></label></div>
     <div id="decOut"></div>
   </div>
@@ -238,7 +238,7 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
     <p class="hint">1. Export the fields you want to work on. 2. Open the CSV in Excel, change values, save as CSV. 3. Preview shows every change before anything is written. 4. Apply lands them as reversible overrides; the next Build carries them.</p>
     <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="name,book_list_price,book_net_price,esd_safe"></label><button id="csvExportBtn">Export CSV</button></div>
     <div id="csvExportOut"></div>
-    <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview changes</button><button id="csvApplyBtn">Apply</button></div>
+    <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview field edits</button><button id="csvApplyBtn">Apply as overrides</button></div>
     <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-10"></label></div>
     <div id="csvOut"></div>
   </div>
@@ -260,6 +260,14 @@ let files = [], current = null, inspectCache = {};
 
 async function api(path, body){ const r = await fetch(path,{method:body?"POST":"GET",headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}); return r.json(); }
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function gateLines(assertions){
+  // A numeric `expected` is a hard check (PASS/FAIL). A text `expected` ("0 before publish", "report only")
+  // is a count the build reports now and the Publish stage will enforce — shown as INFO, never as a pass.
+  return Object.entries(assertions).map(([k,a])=>{
+    if(typeof a.expected==="string"){ const n=Number(a.measured); const cls=n>0?'warn':'ok'; return `<span class="tag ${cls}">INFO</span> ${k}: ${esc(JSON.stringify(a.measured))} — ${esc(a.expected)}`; }
+    return `<span class="tag ${a.ok?'ok':'bad'}">${a.ok?'PASS':'FAIL'}</span> ${k}: measured ${esc(JSON.stringify(a.measured))} expected ${esc(JSON.stringify(a.expected))}`;
+  }).join("<br>");
+}
 let yamlTimer; function renderYamlSoon(){ clearTimeout(yamlTimer); yamlTimer=setTimeout(renderYaml,250); readiness(); }
 function readiness(){
   const items=[]; const b=state.brand; const inc=state.sources.filter(s=>s.include);
@@ -393,12 +401,14 @@ $("#buildBtn").onclick = async () => {
   const r = await api("/api/build",{slug:state.brand.slug});
   if (!r.ok) return show(`HALT:\n${esc(r.halt)}`,"bad");
   const cov = Object.entries(r.coverage).map(([f,c])=>`<b>${esc(f)}</b><span>${c} / ${r.rows}</span>`).join("");
-  const asr = Object.entries(r.assertions).map(([k,a])=>`<span class="tag ${a.ok?'ok':'bad'}">${a.ok?'PASS':'FAIL'}</span> ${k}: measured ${esc(JSON.stringify(a.measured))} expected ${esc(JSON.stringify(a.expected))}`).join("<br>");
+  const asr = gateLines(r.assertions);
   show(`Build ${esc(r.build_id)} — ${r.rows} products<br>${asr}<br>fallback-supplied values: ${r.alias_notes}<details><summary>coverage per field</summary><div class="kv">${cov}</div></details>`+(r.notes.length?`<details><summary>${r.notes.length} note(s)</summary><pre>${esc(r.notes.join("\n"))}</pre></details>`:""), "ok");
 };
 
 // ---- load existing
-async function loadBrands(){ const r=await api("/api/brands"); $("#repo").textContent=`${r.repo} · v${r.version} · window started ${r.started} (restart PIM.bat after updating the code)`; $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
+async function loadBrands(){ const r=await api("/api/brands");
+  if(!r.version){ $("#repo").innerHTML=`<span class="tag bad">The program behind this window is older than the page — close the PIM console and double-click PIM.bat again.</span>`; }
+  else { $("#repo").textContent=`${r.repo} · v${r.version} · window started ${r.started}`; } $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
 function resetState(){
   Object.assign(state, { brand:{slug:"",display_name:"",bc_brand_name:"",brand_id:"",source_root:"",text_fixes:{}}, sources:[], fields:[], joins:{primary_source:"",key_rule:"trim-only",associations:[]}, expectations:{roster_count:""} });
   files=[]; current=null; inspectCache={};
@@ -412,7 +422,7 @@ $("#loadBtn").onclick = async () => {
   if(!slug){ resetState(); show("New brand — start with step 1: give it a short name and point at its folder, then List files.","ok"); $("#slug").focus(); return; }
   const r=await api("/api/load",{slug}); if(r.error) return show(esc(r.error),"bad");
   Object.assign(state, r); for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value=state.brand[id]??""; $("#roster_count").value=state.expectations.roster_count??"";
-  current=null; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; drawFiles(); renderYaml();
+  current=null; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; drawFiles(); renderYaml(); readiness();
   show(`Opened brands/${esc(slug)}. Files declared with blocks are shown but edited in sources.yaml directly.`,"ok");
 };
 // ---- stages
@@ -430,7 +440,7 @@ $("#statusBtn").onclick = runStatus;
 function buildReport(r){
   if (!r.ok) return `<div class="status bad">HALT:\n${esc(r.halt)}</div>`;
   const cov = Object.entries(r.coverage).map(([f,c])=>`<b>${esc(f)}</b><span>${c} / ${r.rows}</span>`).join("");
-  const asr = Object.entries(r.assertions).map(([k,a])=>`<span class="tag ${a.ok?'ok':'bad'}">${a.ok?'PASS':'FAIL'}</span> ${k}: measured ${esc(JSON.stringify(a.measured))} expected ${esc(JSON.stringify(a.expected))}`).join("<br>");
+  const asr = gateLines(r.assertions);
   const dec = r.decide_counts && Object.keys(r.decide_counts).length ? `<br>decisions: ${Object.entries(r.decide_counts).filter(([k,v])=>v).map(([k,v])=>`${k} ${v}`).join(" · ")} → <b>${r.catalog_rows} catalog rows</b>` : "";
   return `<div class="status ok">${r.written?'Built':'Dry run'} ${esc(r.build_id)} — ${r.rows} products, ${(r.overrides||[]).length} override(s) applied${dec}<br>${asr}<br>fallback-supplied values: ${r.alias_notes}<details><summary>coverage per field</summary><div class="kv">${cov}</div></details>`+(r.notes.length?`<details><summary>${r.notes.length} note(s)</summary><pre>${esc(r.notes.join("\n"))}</pre></details>`:"")+`</div>`;
 }
@@ -438,14 +448,17 @@ $("#dryBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a bran
 $("#realBuildBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Building…","warn"); $("#buildOut").innerHTML = buildReport(await api("/api/build",{slug:slug(),write:true})); listBuilds(); };
 async function listBuilds(){
   if(!slug()) return; const r = await api("/api/builds",{slug:slug()});
-  $("#buildsOut").innerHTML = r.builds.length ? `<table><tr><th>version</th><th>created</th><th>products</th></tr>${r.builds.map(b=>`<tr><td><code>${b.build_id}</code></td><td>${esc(b.created)}</td><td>${b.rows}</td></tr>`).join("")}</table>` : `<span class="hint">No builds yet.</span>`;
+  $("#buildsOut").innerHTML = r.builds.length ? `<table><tr><th>version</th><th>created</th><th>products</th><th>catalog rows (SKUs)</th></tr>${r.builds.map(b=>`<tr><td><code>${b.build_id}</code></td><td>${esc(b.created)}</td><td>${b.rows}</td><td>${b.catalog_rows??''}</td></tr>`).join("")}</table>` : `<span class="hint">No builds yet.</span>`;
   const opts = r.builds.map(b=>`<option>${b.build_id}</option>`).join(""); $("#diffA").innerHTML=opts; $("#diffB").innerHTML=opts; if(r.builds[1]) $("#diffA").value=r.builds[1].build_id;
 }
 $("#buildsBtn").onclick = listBuilds;
 $("#diffBtn").onclick = async()=>{
   const r = await api("/api/diff",{slug:slug(),a:$("#diffA").value,b:$("#diffB").value}); if(r.error) return out("diffOut",esc(r.error),"bad");
-  const c=r.counts; const rows = Object.entries(r.changed).flatMap(([sku,fs])=>Object.entries(fs).map(([f,v])=>`<tr><td>${esc(sku)}</td><td>${esc(f)}</td><td>${esc(v.before??'')}</td><td>${esc(v.after??'')}</td></tr>`)).join("");
-  $("#diffOut").innerHTML = `<div class="status ${c.changed_rows||c.added||c.removed?'warn':'ok'}">${c.added} added · ${c.removed} removed · ${c.changed_rows} products changed (${c.changed_cells} cells) · ${c.unchanged_rows} unchanged</div>` + (r.added.length?`<p>Added: ${r.added.map(esc).join(", ")}</p>`:"") + (r.removed.length?`<p>Removed: ${r.removed.map(esc).join(", ")}</p>`:"") + (rows?`<table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${rows}</table>`:"");
+  const section=(d,what,col)=>{ if(!d) return `<div class="status warn">No catalog export for one of these versions (built before Decide existed).</div>`;
+    const c=d.counts; const label=f=>f.startsWith("_")?`<i>${esc(f.slice(1).replace("_"," "))}</i>`:esc(f);
+    const rows = Object.entries(d.changed).flatMap(([sku,fs])=>Object.entries(fs).map(([f,v])=>`<tr><td>${esc(sku)}</td><td>${label(f)}</td><td>${esc(v.before??'')}</td><td>${esc(v.after??'')}</td></tr>`)).join("");
+    return `<div class="status ${c.changed_rows||c.added||c.removed?'warn':'ok'}"><b>${what}</b> — ${c.added} added · ${c.removed} removed · ${c.changed_rows} changed (${c.changed_cells} cells) · ${c.unchanged_rows} unchanged</div>` + (d.added.length?`<p>Added: ${d.added.map(esc).join(", ")}</p>`:"") + (d.removed.length?`<p>Removed: ${d.removed.map(esc).join(", ")}</p>`:"") + (rows?`<table><tr><th>${col}</th><th>field</th><th>before</th><th>after</th></tr>${rows}</table>`:""); };
+  $("#diffOut").innerHTML = `<p class="hint"><b>Products</b> = one row per vendor part number (what the files say). <b>Catalog</b> = one row per CT SKU (what the store will get: decisions, packs, kits, prices). A decision change shows only in the catalog diff.</p>` + section(r,"Products","product") + section(r.catalog,"Catalog","CT SKU");
 };
 $("#decExportBtn").onclick = async()=>{ out("decExportOut","Building the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; const cnt=Object.entries(r.counts).map(([k,v])=>`${k}: ${v}`).join(" · "); out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products. Carry states now: ${esc(cnt)}. Open in Excel, edit the first nine columns, save as CSV.`,"ok"); };
 function decReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} decision change(s) · ${c.unknown} unknown part number(s) · ${c.errors} error(s)`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Saved to <code>${esc(r.written)}</code> — now run <b>Build</b>.`:'')+`</div>`;
