@@ -75,3 +75,48 @@ def test_sheet_import_refuses_blank_or_missing_path_politely(tmp_path):
     assert ".csv" in _check_sheet_path(str(x))["error"]
     c = tmp_path / "sheet.csv"; c.write_text("mpn\n", encoding="utf-8")
     assert _check_sheet_path(str(c)) is None
+
+
+def test_save_pack_binds_pricing_fields_and_keeps_operator_edits(tmp_path, monkeypatch):
+    """A Pace-shaped setup: the sheet must show title / category / MSRP without a hand edit,
+    and a second Save pack must not wipe a rule the operator wrote into pricing.yaml."""
+    from pim.ui.server import guess_pricing_fields
+    fields = {"sku": {}, "title": {}, "category": {}, "msrp_price": {"type": "number"}, "weight": {}, "dealer_cost": {"type": "number"}}
+    assert guess_pricing_fields(fields) == {"name": "title", "category": "category", "list_price": "msrp_price", "cost": "dealer_cost"}
+
+    monkeypatch.setattr("pim.ui.server.BRANDS", tmp_path)
+    shutil.copytree(FIXTURE_PACK, tmp_path / "fixture-brand")
+    st = load_pack("fixture-brand")
+    pricing = tmp_path / "fixture-brand" / "pricing.yaml"
+    doc = yaml.safe_load(pricing.read_text(encoding="utf-8"))
+    doc["rules"] = [{"scope": "default", "basis": "discount-off-msrp", "factor": 0.2, "basis_note": "operator"}]
+    doc["margin_floor_pct"] = 15
+    pricing.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
+    r = write_pack(st, overwrite=True)
+    assert not r["errors"], r["errors"]
+    after = yaml.safe_load(pricing.read_text(encoding="utf-8"))
+    assert after["rules"][0]["basis"] == "discount-off-msrp" and after["margin_floor_pct"] == 15
+    assert after["fields"] == doc["fields"]          # bindings already there are untouched
+
+
+def test_open_local_only_opens_files_under_var(tmp_path, monkeypatch):
+    from pim.ui.server import open_local
+    monkeypatch.setattr("pim.ui.server._var", lambda: tmp_path / "var")
+    assert "export a sheet first" in open_local("")["error"]
+    outside = tmp_path / "elsewhere.csv"; outside.write_text("x")
+    assert "only files under" in open_local(str(outside))["error"]
+    assert "not found" in open_local(str(tmp_path / "var" / "nope.csv"))["error"]
+
+
+def test_pack_fields_lists_kept_columns_and_bindings(tmp_path, monkeypatch):
+    from pim.ui.server import pack_fields
+    monkeypatch.setattr("pim.ui.server.BRANDS", tmp_path)
+    shutil.copytree(FIXTURE_PACK, tmp_path / "fixture-brand")
+    r = pack_fields("fixture-brand")
+    names = {f["name"]: f for f in r["fields"]}
+    fy = yaml.safe_load((FIXTURE_PACK / "fields.yaml").read_text(encoding="utf-8"))["fields"]
+    assert set(names) == set(fy)
+    py = yaml.safe_load((FIXTURE_PACK / "pricing.yaml").read_text(encoding="utf-8"))["fields"]
+    for role, fname in py.items():
+        assert names[fname]["bound_as"] == role
+    assert "no pack" in pack_fields("nope")["error"]

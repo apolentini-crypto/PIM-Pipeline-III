@@ -1,0 +1,21 @@
+# Pace Worldwide — brand identity. Written by `pim setup`; edit freely, it is the truth.
+slug: pace-worldwide
+display_name: Pace Worldwide
+bc_brand_name: Pace Worldwide
+brand_id: 61
+mpn_normalisation:
+  upper: true
+  strip_whitespace: true
+  replace:
+    .: '-'
+  allowed: A-Z0-9_-
+  trim: -_
+environments:
+  sandbox:
+    kind: sandbox
+    store_hash_env: BC_SANDBOX_STORE_HASH
+    token_env: BC_SANDBOX_ACCESS_TOKEN
+  live:
+    kind: live
+    store_hash_env: BC_STORE_HASH
+    token_env: BC_ACCESS_TOKEN

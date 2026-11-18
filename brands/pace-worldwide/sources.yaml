@@ -1,0 +1,16 @@
+# Files the build reads (READ-ONLY, FR-10). Headers are byte-exact (FR-111).
+source_root: C:\Users\apole\OneDrive - Castletronics\Castletronics Shared\Business Folders\Brand Distribution\Pace
+  Worldwide\2026
+sources:
+- id: S1
+  path: PACE PIM LIST Jun 2026 Final.xlsx
+  format: xlsx
+  sheet: Sheet 1 - products-analysis-202
+  header_row: 1
+  key_column: SKU
+- id: S2
+  path: Americas Emerald Aug 2025 Price List.xlsx
+  format: xlsx
+  sheet: Americas Emerald Aug 2025
+  header_row: 1
+  key_column: PART NUMBER

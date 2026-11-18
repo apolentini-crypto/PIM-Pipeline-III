@@ -1,0 +1,5 @@
+# Roster = primary_source keys. Keys are trimmed, never altered inside (FR-15..17).
+primary_source: S1
+key:
+  rule: trim-only
+associations: []

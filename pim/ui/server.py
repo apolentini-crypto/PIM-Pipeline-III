@@ -94,6 +94,9 @@ def inspect(root: str, path: str, fmt: str, sheet: str | None, header_row: int, 
         return {"sheets": sheets, "sheet": sheet, "rows": rows, "total_rows": total, "headers": headers, "nested": []}
     except UnicodeDecodeError as e:
         return {"error": f"{p.name} is not {encoding}; try encoding cp1252 (byte {e.object[e.start:e.start+1]!r} at {e.start})"}
+    except PermissionError:
+        return {"error": f"Can't read {p.name} — Windows says it is in use by another program. Most likely it is open in Excel: "
+                         f"close that workbook, then click the file again. The file itself was not touched."}
     except Exception as e:  # report, never crash the window
         return {"error": f"{type(e).__name__}: {e}"}
     finally:
@@ -199,8 +202,11 @@ def render_pack(state: dict) -> dict[str, str]:
     endpoints_doc = {"endpoints": {"bc": {"adapter": "bigcommerce", "environments": ["sandbox", "live"],
                                           "field_map": {n: n for n in confirmed}, "custom_fields": [],
                                           "sentinel_empty_fields": ["related_products"]}}}
-    pricing_doc = {"rules": [{"scope": "default", "basis": "msrp-passthrough", "basis_note": "setup default: price = list price; edit in pricing.yaml"}],
+    pricing_doc = {"purchase_unit": "each", "fields": guess_pricing_fields(fields),
+                   "rules": [{"scope": "default", "basis": "msrp-passthrough", "basis_note": "setup default: price = list price; edit in pricing.yaml"}],
                    "unpriced_means": "hold"}
+    if not pricing_doc["fields"]:
+        del pricing_doc["fields"]
     return {
         "brand.yaml": _dump(brand, f"# {brand['display_name']} — brand identity. Written by `pim setup`; edit freely, it is the truth."),
         "sources.yaml": _dump(sources_doc, "# Files the build reads (READ-ONLY, FR-10). Headers are byte-exact (FR-111)."),
@@ -211,6 +217,149 @@ def render_pack(state: dict) -> dict[str, str]:
         "endpoints.yaml": _dump(endpoints_doc, "# canonical -> endpoint field map (FR-104). Rename the right-hand side to the BC field names."),
         "pricing.yaml": _dump(pricing_doc, "# Pricing rules (A1 FR-154..159)."),
     }
+
+
+def guess_pricing_fields(fields: dict) -> dict:
+    """pricing.yaml `fields:` from the field names the operator chose — so the decision sheet shows
+    the title, category and list price without a hand edit. Each binding is the first field whose
+    name matches; nothing is bound when nothing matches (the sheet column stays blank, not wrong)."""
+    names = list(fields)
+    numeric = {n for n, d in fields.items() if d.get("type") == "number" or d.get("unit")}
+
+    def pick(cands, want_number=False):
+        for c in cands:
+            for n in names:
+                if c in n.lower() and (not want_number or n in numeric):
+                    return n
+        return None
+    out = {
+        "name": pick(["title", "product_name", "name", "description"]),
+        "category": pick(["category"]),
+        "list_price": pick(["msrp", "list_price", "list", "retail", "price"], want_number=True),
+        "cost": pick(["cost", "net_price", "dealer", "wholesale"], want_number=True),
+        "weight": pick(["weight"], want_number=True),
+    }
+    return {k: v for k, v in out.items() if v}
+
+
+def merge_pricing(existing_text: str, rendered: str) -> str:
+    """Save pack never throws away a pricing.yaml the operator has edited: rules, unpriced meaning and
+    any binding already there are kept; only bindings the file lacks are filled from the guess."""
+    try:
+        cur = yaml.safe_load(existing_text) or {}
+    except yaml.YAMLError:
+        return rendered
+    new = yaml.safe_load(rendered)
+    merged = dict(cur)
+    want = new.get("fields") or {}
+    have = {k: v for k, v in (cur.get("fields") or {}).items() if v}
+    for k, v in want.items():
+        have.setdefault(k, v)
+    if have:
+        merged["fields"] = have
+    merged.setdefault("purchase_unit", new.get("purchase_unit", "each"))
+    merged.setdefault("rules", new["rules"])
+    merged.setdefault("unpriced_means", new["unpriced_means"])
+    return _dump(merged, "# Pricing rules (A1 FR-154..159). Save pack keeps your edits here; it only fills in missing field bindings.")
+
+
+def pack_fields(slug: str) -> dict:
+    """The columns the operator kept, for pickers: name, which file it comes from, and the ones
+    pricing.yaml already binds (shown on the decision sheet regardless)."""
+    d = BRANDS / slug
+    if not (d / "fields.yaml").exists():
+        return {"error": f"no pack {slug}"}
+    fy = yaml.safe_load((d / "fields.yaml").read_text(encoding="utf-8")) or {}
+    py = yaml.safe_load((d / "pricing.yaml").read_text(encoding="utf-8")) if (d / "pricing.yaml").exists() else {}
+    bound = {v: k for k, v in ((py or {}).get("fields") or {}).items() if v}
+    sy = yaml.safe_load((d / "sources.yaml").read_text(encoding="utf-8")) if (d / "sources.yaml").exists() else {}
+    files = {src.get("id"): Path(src.get("path", "")).name for src in ((sy or {}).get("sources") or [])}
+    out = []
+    for name, spec in (fy.get("fields") or {}).items():
+        prim = spec.get("primary") or {}
+        out.append({"name": name, "source": prim.get("source", ""), "file": files.get(prim.get("source", ""), ""), "column": prim.get("column", ""),
+                    "bound_as": bound.get(name, ""), "publish": spec.get("confirmed") == "Y"})
+    return {"fields": out, "files": files}
+
+
+def open_local(path: str, folder: bool = False) -> dict:
+    """Open a file the window wrote (a sheet under var/) with the PC's default program — Excel for a CSV —
+    or its folder in Explorer. Only files under var/ are opened; the window never opens anything else."""
+    import os, subprocess, sys
+    if not path.strip():
+        return {"error": "nothing to open yet — export a sheet first"}
+    p = Path(path.strip()).resolve()
+    try:
+        p.relative_to(_var().resolve())
+    except ValueError:
+        return {"error": f"only files under {_var()} are opened from here: {p}"}
+    if not p.exists():
+        return {"error": f"file not found: {p}"}
+    target = p.parent if folder else p
+    try:
+        if sys.platform.startswith("win"):
+            os.startfile(str(target))  # type: ignore[attr-defined]
+            # Windows will not let a background process (this server) put a new window in front
+            # of the one you are using, so Excel/Explorer opened behind the browser or minimized
+            # and looked like nothing happened. Find the new window and bring it forward.
+            _bring_to_front_windows(target.name)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(target)])
+        else:
+            subprocess.Popen(["xdg-open", str(target)])
+    except OSError as e:
+        return {"error": f"could not open {target}: {e}"}
+    return {"opened": str(target)}
+
+
+def _bring_to_front_windows(needle: str, timeout_s: float = 8.0) -> None:
+    """Windows only. In a background thread, wait for a top-level window whose title contains
+    `needle` (the file or folder name — Excel titles 'x.csv - Excel', Explorer titles the folder),
+    restore it if minimized and make it the foreground window. Never raises."""
+    import threading, time
+
+    def run() -> None:
+        try:
+            import ctypes
+            from ctypes import wintypes
+            u32 = ctypes.windll.user32
+            EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+            want = needle.lower()
+            deadline = time.time() + timeout_s
+            while time.time() < deadline:
+                found: list = []
+
+                def cb(hwnd, _lp):
+                    if not u32.IsWindowVisible(hwnd):
+                        return True
+                    n = u32.GetWindowTextLengthW(hwnd)
+                    if n <= 0:
+                        return True
+                    buf = ctypes.create_unicode_buffer(n + 1)
+                    u32.GetWindowTextW(hwnd, buf, n + 1)
+                    if want in buf.value.lower():
+                        found.append(hwnd)
+                        return False
+                    return True
+
+                u32.EnumWindows(EnumWindowsProc(cb), 0)
+                if found:
+                    hwnd = found[0]
+                    if u32.IsIconic(hwnd):
+                        u32.ShowWindow(hwnd, 9)        # SW_RESTORE
+                    # A background process may only take the foreground after simulating input:
+                    # a harmless ALT press, then SetForegroundWindow succeeds.
+                    u32.keybd_event(0x12, 0, 0, 0)     # ALT down
+                    u32.keybd_event(0x12, 0, 2, 0)     # ALT up
+                    u32.SetForegroundWindow(hwnd)
+                    u32.BringWindowToTop(hwnd)
+                    u32.ShowWindow(hwnd, 5)            # SW_SHOW
+                    return
+                time.sleep(0.25)
+        except Exception:
+            pass                                       # best effort; the file is open either way
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 def write_pack(state: dict, overwrite: bool) -> dict:
@@ -226,6 +375,8 @@ def write_pack(state: dict, overwrite: bool) -> dict:
     (d / "overrides").mkdir(exist_ok=True)
     (d / "decisions").mkdir(exist_ok=True)
     for n, text in files.items():
+        if n == "pricing.yaml" and (d / n).exists():
+            text = merge_pricing((d / n).read_text(encoding="utf-8"), text)
         (d / n).write_text(text, encoding="utf-8", newline="\n")
     for n, hdr in (("exclusions.csv", "sku,mpn,reason,date\n"), ("derivatives.csv", "parent_mpn,pack_qty,name,basis\n")):
         if not (d / n).exists():
@@ -405,12 +556,12 @@ def csv_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
     return rep
 
 
-def decision_sheet(slug: str, fields: list[str]) -> dict:
+def decision_sheet(slug: str, fields: list[str], write: bool = True) -> dict:
     from pim.build import export_decision_sheet
     from pim.normalize.core import HaltError
     extra = [f.strip() for f in (fields or "").split(",") if f.strip()] if isinstance(fields, str) else list(fields or [])
     try:
-        return export_decision_sheet(BRANDS / slug, _var(), extra)
+        return export_decision_sheet(BRANDS / slug, _var(), extra, write=write)
     except HaltError as e:
         return {"error": str(e)}
 
@@ -518,6 +669,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(csv_import(body.get("slug", ""), body.get("path", ""), bool(body.get("apply")), body.get("who", ""), body.get("why", "")))
             elif path == "/api/suggest":
                 self._json({"name": suggest_name(body.get("header", ""))})
+            elif path == "/api/decision_preview":
+                self._json(decision_sheet(body.get("slug", ""), body.get("fields", ""), write=False))
+            elif path == "/api/fields":
+                self._json(pack_fields(body.get("slug", "")))
+            elif path == "/api/open":
+                self._json(open_local(body.get("path", ""), bool(body.get("folder"))))
             elif path == "/api/shutdown":
                 # local-only: a newer PIM window asks this one to stop (PIM.bat restart)
                 self._json({"stopping": True})

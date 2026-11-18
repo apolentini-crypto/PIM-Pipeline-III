@@ -1,0 +1,12 @@
+# Pricing rules (A1 FR-154..159). Save pack keeps your edits here; it only fills in missing field bindings.
+purchase_unit: each
+fields:
+  cost: discount_price_usd
+  list_price: msrp_price
+  category: category
+  name: title
+rules:
+- scope: default
+  basis: msrp-passthrough
+  basis_note: 'setup default: price = list price; edit in pricing.yaml'
+unpriced_means: hold

@@ -68,7 +68,18 @@ details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
 .flow{padding-left:1.2rem} .flow li{margin:.3rem 0}
 .guide{background:var(--accent-bg);border:1px solid #c9dbe9;border-radius:8px;padding:.7rem 1rem;margin:.5rem 0 .9rem;font-size:.9rem}
 .guide > b:first-child{display:block;margin-bottom:.25rem}
-.guide ol{margin:.2rem 0 0;padding-left:1.2rem} .guide li{margin:.15rem 0}
+.pick{display:grid;gap:.35rem;margin:.2rem 0 .4rem}
+.pick .src{font-size:.78rem;color:var(--muted);margin-top:.35rem}
+.pick .opts{display:flex;flex-wrap:wrap;gap:.25rem .5rem}
+.pick label.inline{padding:.15rem .5rem;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:.8rem}
+.pick label.inline.fixed{background:var(--accent-bg);border-color:#c9dbe9;color:var(--muted)}
+.pick label.inline input{margin:0}
+.chip{display:inline-block;font-family:var(--mono);font-size:.74rem;padding:.05rem .4rem;border-radius:4px;background:var(--bg);border:1px solid var(--line);margin:.1rem .15rem .1rem 0}
+.sw{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;vertical-align:-2px;border:1px solid var(--line)}
+.sw.you{background:#fdf3e7;border-color:#e6b980} .sw.key{background:var(--accent-bg)} .sw.ref{background:#fff}
+.prev th.you,.prev td.you{background:#fdf3e7} .prev th.key,.prev td.key{background:var(--accent-bg)}
+.prev th{position:sticky;top:0;z-index:1} .prev td{max-width:12rem}
+.guide ol{margin:.2rem 0 0;padding-left:1.2rem} .guide li{margin:.15rem 0} .guide p{margin:.45rem 0 .15rem}
 .help{display:inline-block;width:1rem;height:1rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.7rem;text-align:center;line-height:1rem;cursor:help;margin-left:.25rem;font-weight:700}
 .cap{color:var(--muted);font-size:.74rem;max-width:18rem;line-height:1.3}
 label>.cap{margin-top:.1rem}
@@ -109,7 +120,8 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
 <li><b>Columns to keep</b> — tick the columns you want and give each a name. Everything you don't tick is ignored.</li>
 <li><b>Roster</b> — which file's part-number list defines "the products". Other files only add information to those.</li>
 <li><b>Validate → Save pack</b>, then <b>Build (dry run)</b> to see coverage before anything is stored.</li>
-</ol></div>
+</ol>
+<b>Next:</b> once the checklist is all ticked and a Build (not a dry run) has succeeded, go straight to <b>4 Decide</b>. Skip <b>2 What changed</b> the first time — it is for later, when the brand sends you an updated file.</div>
 <h2><span class="n">1</span>Brand</h2>
 <div class="card">
   <div class="row">
@@ -155,7 +167,7 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
   <li><b>Type</b>: <em>text</em> unless the column is a number, a true/false, HTML, or a web link. Numbers that are really codes (EANs, part numbers) stay <em>text</em> so leading zeros survive.</li>
   <li><b>Unit</b>: if the column's heading says the unit (<code>Length (mm)</code>) it is filled in for you. If the unit is <em>inside the values</em> (<code>133.5 mm</code>, <code>4,72 in</code>) type the units it may contain, comma-separated: <code>mm,in</code>.</li>
   <li><b>Fallback for</b>: the same information from a second file. Pick the field you already named; this column fills in only where that one is empty. If both have a value and they disagree, the build stops and shows you both.</li>
-  <li><b>req</b> = every product must have it (build stops otherwise). <b>publish</b> = send it to the store. Untick publish for working data you keep but don't list.</li>
+  <li><b>req</b> and <b>publish</b> never remove a column — ticking the column is what keeps it. <b>req</b> = every product must have a value; if one is blank the build <em>stops</em> and names the product (use it for the part number and title). Unticked, blanks are allowed and the build just reports how many. <b>publish</b> = the value is sent to the store when you publish. Unticked, it stays in your database for your own use and the store never sees it (vendor cost, internal notes).</li>
   </ol></div>
   <div class="cols" id="cols"><span class="hint">Pick a file above.</span></div>
 </div>
@@ -190,7 +202,7 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
 </div>
 
 <section class="stage" id="stage-status" hidden>
-  <div class="guide"><b>What this stage does</b> It answers "did any of the brand's files change since I last built?" Nothing happens to your data here. If something changed, go to <b>Build</b>.</div>
+  <div class="guide"><b>What this stage does</b> It answers "did any of the brand's files change since I last built?" Nothing happens to your data here. If something changed, go to <b>Build</b>. <b>Next:</b> 3 Build (if a file changed) or 4 Decide (if nothing did).</div>
   <div class="card">
     <div class="actions"><button id="statusBtn">Check files now</button><span class="hint">Re-reads every declared file and compares it with the fingerprint recorded by the last build.</span></div>
     <div id="statusOut"></div>
@@ -208,7 +220,7 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
 </section>
 
 <section class="stage" id="stage-build" hidden>
-  <div class="guide"><b>What this stage does</b> A build reads the files, lines every product up by part number, fills gaps from fallback columns, applies your overrides, and stores a numbered version. <b>Dry run</b> does all of that but stores nothing — use it first. Then <b>Compare</b> two versions to see exactly what changed. Every number shown is measured, and a FAIL names the product and field.</div>
+  <div class="guide"><b>What this stage does</b> A build reads the files, lines every product up by part number, fills gaps from fallback columns, applies your overrides, and stores a numbered version. <b>Dry run</b> does all of that but stores nothing — use it first. Then <b>Compare</b> two versions to see exactly what changed. Every number shown is measured, and a FAIL names the product and field. <b>Next:</b> with a clean Build, go to <b>4 Decide</b>; after applying decisions or field edits there, come back here and Build again so the catalog reflects them.</div>
   <div class="card">
     <div class="actions"><button class="ghost" id="dryBtn">Dry run (writes nothing)</button><button id="realBuildBtn">Build</button><span class="hint">Build reads the files, applies overrides, stores a new version and its export.</span></div>
     <div id="buildOut"></div>
@@ -219,32 +231,58 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
   </div>
 </section>
 
-<section class="stage" id="stage-decide" hidden>
-  <div class="guide"><b>What this stage does</b> Two kinds of decisions live here. <b>A — which products the store sells, and how:</b> the decision sheet has <b>one row per CT SKU</b> — every vendor part number, each pack directly under its parent (<code>MSF.P5</code>), kits at the end. Per row you set <code>carry_state</code> (carry · skip · derivatives-only · carry+derivatives; a pack or kit is just carry or skip), a hold reason, fulfillment, a starting quantity, or a hand-set price. To add a pack, type its quantity in <code>new_pack_qty</code> on the parent's row (<code>5</code> or <code>5;10</code>). Kits still go in <code>derivatives.csv</code>. Every cell is checked on import — money, whole numbers, dates, vocabulary — and the sheet is refused while any error stands. The build turns it into the catalog table below. <b>B — hand corrections to the data itself</b> (a wrong weight, a better title): the field sheet further down; those land as reversible overrides.</div>
+<div class="layout" id="stage-decide" hidden>
+<main>
+  <div class="guide"><b>What this stage does</b> You decide what the store sells (A), and fix any wrong data values (B). Nothing here touches the store. Packs and kits are set from the sheet or in <code>derivatives.csv</code>; pricing rules live in <code>pricing.yaml</code>. <b>Next:</b> after <b>Apply</b>, go to <b>3 Build</b> and build again.</div>
+
   <div class="card">
-    <b>A. Decision sheet — what to carry</b>
-    <p class="hint">1. Export the sheet. 2. Open it in Excel; edit the columns <b>without</b> a "—" prefix (<code>mpn</code> is the key — never change it; "—" columns are context and are ignored). Save as CSV. 3. Preview lists every change and every bad cell by row. 4. Apply saves <code>decisions/decisions.csv</code> (and <code>derivatives.csv</code> for new packs). 5. Build.</p>
-    <div class="row"><label>Extra context columns <input type="text" id="decFields" class="wide" placeholder="ean,section_l3,unit_weight_kg"></label><button id="decExportBtn">Export decision sheet</button></div>
+    <b style="font-size:1rem">A. Decision sheet — what to carry</b>
+    <p class="hint" style="margin:.2rem 0 .6rem">One row per product (and per pack or kit). You fill in the shaded columns in Excel; the rest are reference and come back untouched. The preview on the right shows the sheet as it will be written.</p>
+
+    <h2 style="margin-top:.6rem"><span class="n">1</span>Choose reference columns</h2>
+    <div class="hint" id="decFixed" style="margin-bottom:.4rem"></div>
+    <div id="decFieldPick"></div>
+    <input type="hidden" id="decFields">
+
+    <h2><span class="n">2</span>Export and edit in Excel</h2>
+    <div class="actions"><button id="decExportBtn">Export decision sheet</button><button class="ghost" id="decOpenBtn" title="Open the exported sheet in Excel">Open in Excel</button><button class="ghost" id="decOpenDirBtn" title="Show the sheet in its folder">Open folder</button></div>
+    <p class="hint">In Excel set <code>carry_state</code> per row — <b>carry</b> or <b>skip</b> (also <i>derivatives-only</i> / <i>carry+derivatives</i> when a row gets packs or kits). Optional: <code>hold_reason</code>, <code>fulfillment</code>, <code>initial_qty</code>, a hand-set <code>price</code> (beats every rule), <code>new_pack_qty</code> (<code>5</code> or <code>5;10</code>) to add packs. <code>mpn</code> is the key — never change it. Save as CSV, same name.</p>
     <div id="decExportOut"></div>
-    <div class="row" style="margin-top:.8rem"><label>Edited sheet path <input type="text" id="decPath" class="wide"></label><button class="ghost" id="decPreviewBtn">Preview decisions</button><button id="decApplyBtn">Apply decisions</button></div>
-    <div class="row"><label>Who <input type="text" id="decWho" placeholder="Tony"></label><label>Why <input type="text" id="decWhy" class="wide" placeholder="range review 2026-10"></label></div>
+
+    <h2><span class="n">3</span>Bring the decisions back</h2>
+    <div class="row"><label>Edited sheet <input type="text" id="decPath" class="wide" placeholder="filled in by Export"></label></div>
+    <div class="row"><label>Who <input type="text" id="decWho" placeholder="Tony"></label><label>Why <input type="text" id="decWhy" class="wide" placeholder="range review 2026-11"></label></div>
+    <div class="actions" style="margin-top:.5rem"><button class="ghost" id="decPreviewBtn">Preview decisions</button><button id="decApplyBtn">Apply decisions</button><span class="hint">Preview lists every change and every bad cell by row and refuses the sheet while an error stands. Apply writes <code>decisions/decisions.csv</code> (and <code>derivatives.csv</code> for new packs).</span></div>
     <div id="decOut"></div>
+
+    <h2><span class="n">4</span>Build again</h2>
+    <div class="actions"><button class="ghost" id="decGoBuild">Go to 3 Build</button><span class="hint">The catalog below (one row per CT SKU, with prices) comes from the build.</span></div>
   </div>
+
   <div class="card">
     <div class="actions"><b>Catalog — one row per CT SKU (from the last build)</b><button class="ghost small" id="catBtn">Refresh</button></div>
     <div id="catOut"><span class="hint">Build first, then refresh.</span></div>
   </div>
+
   <div class="card">
-    <b>B. Field-edit sheet — hand corrections to data values</b> <span class="hint">(file name <code>&lt;brand&gt;-&lt;build id&gt;.csv</code>, one column per field — not the decision sheet)</span>
-    <p class="hint">1. Export the fields you want to work on. 2. Open the CSV in Excel, change values, save as CSV. 3. Preview shows every change before anything is written. 4. Apply lands them as reversible overrides; the next Build carries them.</p>
-    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="name,book_list_price,book_net_price,esd_safe"></label><button id="csvExportBtn">Export field-edit sheet</button></div>
+    <b style="font-size:1rem">B. Field-edit sheet — hand corrections to data values</b> <span class="hint">(a wrong weight, a better title — one column per field; not the decision sheet)</span>
+    <p class="hint">Export the fields you want to work on → change values in Excel, save as CSV → Preview shows every change before anything is written → Apply lands them as reversible overrides; the next Build carries them.</p>
+    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="title,weight,msrp_price"></label><button id="csvExportBtn">Export field-edit sheet</button></div>
     <div id="csvExportOut"></div>
     <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview field edits</button><button id="csvApplyBtn">Apply as overrides</button></div>
-    <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-10"></label></div>
+    <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-11"></label></div>
     <div id="csvOut"></div>
   </div>
+
   <div class="card planned-card"><b>Packs and kits.</b> A pack is added from the sheet (<code>new_pack_qty</code> on the parent's row) or in <code>brands/&lt;brand&gt;/derivatives.csv</code>: <code>pack,MSF,5,…</code> makes <code>59.MSF.P5</code> (5 × each: cost, list and weight multiplied; dimensions never computed); <code>kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,"Spatula Set, 5 pc",…</code> makes <code>59.MS-KIT5</code> (sums of the components). The parent's carry_state must allow derivatives. Pricing rules (markup on cost, discount off list, fixed, list as-is, with rounding and a margin floor) live in <code>pricing.yaml</code>. A form for these comes next.</div>
-</section>
+</main>
+<aside>
+  <div class="actions" style="justify-content:space-between"><b>Sheet preview</b><span class="hint" id="decPrevMeta">pick a brand</span></div>
+  <div class="hint" style="margin:.3rem 0 .5rem"><span class="sw you"></span> you fill in &nbsp; <span class="sw key"></span> key &nbsp; <span class="sw ref"></span> reference</div>
+  <div id="decPrevCounts" class="hint"></div>
+  <div id="decPrev" class="grid prev" style="max-height:calc(100vh - 230px)"><span class="hint">Choose columns on the left — the preview updates as you tick.</span></div>
+</aside>
+</div>
 
 <section class="stage" id="stage-derive" hidden>
   <div class="card planned-card"><b>M2 — Derive &amp; review.</b> Facets (the filter values), the packed <code>filter_metadata</code> and <code>spec_display</code> strings with the 250-character halt, families, SEO titles and descriptions, cleaned HTML — computed from the catalog rows and shown here per product, with every value outside the frozen vocabulary flagged by name.</div>
@@ -371,7 +409,7 @@ function drawCols(){
         <input type="text" data-name="${esc(h)}" value="${esc(f?f.name:'')}" placeholder="${esc(suggest(h))}" ${f?'':'disabled'}>
         <span style="display:flex;gap:.25rem"><select data-type="${esc(h)}" ${f?'':'disabled'}>${["text","number","integer","bool","html","url"].map(t=>`<option ${f&&f.type===t?'selected':''}>${t}</option>`).join("")}</select><input type="text" data-unit="${esc(h)}" value="${esc(f?(f.column_unit||f.unit||''):unitGuess)}" placeholder="unit" style="width:3.6rem" ${f?'':'disabled'} title="unit the column carries (mm, in, g…) or a comma list of units found inside the values"></span>
         <select data-alias="${esc(h)}" ${f?'disabled':''}><option value="">${al?'↳ '+esc(al.name):'—'}</option>${others.map(o=>`<option value="${esc(o.name)}">${esc(o.name)}</option>`).join("")}</select>
-        <span style="display:flex;gap:.3rem;font-size:.75rem"><label class="inline" title="must be present for every product"><input type="checkbox" data-req="${esc(h)}" ${f&&f.required?'checked':''} ${f?'':'disabled'}>req</label><label class="inline" title="publish this field to the store"><input type="checkbox" data-conf="${esc(h)}" ${f&&f.confirmed?'checked':''} ${f?'':'disabled'}>publish</label></span>
+        <span style="display:flex;gap:.3rem;font-size:.75rem"><label class="inline" title="Required: every product must have a value, or the build stops and names the product. Unticked = blanks allowed, just counted."><input type="checkbox" data-req="${esc(h)}" ${f&&f.required?'checked':''} ${f?'':'disabled'}>req</label><label class="inline" title="Publish: send this value to the store. Unticked = kept in your database only; the store never sees it."><input type="checkbox" data-conf="${esc(h)}" ${f&&f.confirmed?'checked':''} ${f?'':'disabled'}>publish</label></span>
       </div>`;}).join("");
   const C=$("#cols");
   C.querySelectorAll("input[data-use]").forEach(el=>el.onchange=()=>{ const h=el.dataset.use; if(el.checked){ const unitGuess=(h.match(/\((mm|in|g|oz|kg|lb)\)/i)||[])[1]?.toLowerCase()||""; state.fields.push({name:uniqueName(suggest(h)),source:s.id,column:h,column_unit:unitGuess||null,type:"text",unit_mode:unitGuess?"declared":"none",unit:unitGuess,required:false,confirmed:false,aliases:[]}); } else { state.fields=state.fields.filter(x=>!(x.source===s.id&&x.column===h)); } drawCols(); renderYamlSoon(); });
@@ -427,7 +465,7 @@ $("#loadBtn").onclick = async () => {
   show(`Opened brands/${esc(slug)}. Files declared with blocks are shown but edited in sources.yaml directly.`,"ok");
 };
 // ---- stages
-document.querySelectorAll(".rail button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".rail button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("[id^=stage-]").forEach(x=>x.hidden=true); $("#stage-"+b.dataset.stage).hidden=false; window.scrollTo(0,0); if(b.dataset.stage==="status") runStatus(); if(b.dataset.stage==="build") listBuilds(); });
+document.querySelectorAll(".rail button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".rail button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("[id^=stage-]").forEach(x=>x.hidden=true); $("#stage-"+b.dataset.stage).hidden=false; window.scrollTo(0,0); if(b.dataset.stage==="status") runStatus(); if(b.dataset.stage==="build") listBuilds(); if(b.dataset.stage==="decide") loadFieldPicker(); });
 function slug(){ return state.brand.slug || $("#loadSel").value; }
 function out(id, html, cls){ $("#"+id).innerHTML = `<div class="status ${cls||''}">${html}</div>`; }
 async function runStatus(){
@@ -461,10 +499,38 @@ $("#diffBtn").onclick = async()=>{
     return `<div class="status ${c.changed_rows||c.added||c.removed?'warn':'ok'}"><b>${what}</b> — ${c.added} added · ${c.removed} removed · ${c.changed_rows} changed (${c.changed_cells} cells) · ${c.unchanged_rows} unchanged</div>` + (d.added.length?`<p>Added: ${d.added.map(esc).join(", ")}</p>`:"") + (d.removed.length?`<p>Removed: ${d.removed.map(esc).join(", ")}</p>`:"") + (rows?`<table><tr><th>${col}</th><th>field</th><th>before</th><th>after</th></tr>${rows}</table>`:""); };
   $("#diffOut").innerHTML = `<p class="hint"><b>Products</b> = one row per vendor part number (what the files say). <b>Catalog</b> = one row per CT SKU (what the store will get: decisions, packs, kits, prices). A decision change shows only in the catalog diff.</p>` + section(r,"Products","product") + section(r.catalog,"Catalog","CT SKU");
 };
-$("#decExportBtn").onclick = async()=>{ out("decExportOut","Building the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; const cnt=Object.entries(r.counts).map(([k,v])=>`${k}: ${v}`).join(" · "); const kinds=Object.entries(r.kinds||{}).map(([k,v])=>`${v} ${k}`).join(" · "); out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows (${esc(kinds)}); ${r.unpriced} unpriced. Carry states: ${esc(cnt)}. Open in Excel, edit the columns without a "—", save as CSV.`,"ok"); };
-function decReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) · ${c.new_packs||0} new pack(s) · ${c.unknown} unknown key(s) · <b>${c.errors} error(s)</b>`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Saved to <code>${esc(r.written)}</code>${r.written_derivatives?` and <code>${esc(r.written_derivatives)}</code>`:''} — now run <b>Build</b>.`:'')+`</div>`;
-  if (r.changes.length) h+=`<table><tr><th>sheet row</th><th>key</th><th>column</th><th>before</th><th>after</th><th>problem</th></tr>${r.changes.map(x=>`<tr class="${x.error?'st-missing':''}"><td>${esc(x.row??'')}</td><td>${esc(x.mpn)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.error||'')}</td></tr>`).join("")}</table>`;
-  if (r.unknown.length) h+=`<p class="status bad">Not in the roster (ignored): ${r.unknown.map(esc).join(", ")}</p>`; return h; }
+const DEC_EDIT=new Set(["carry_state","hold_reason","fulfillment","initial_qty","price","new_pack_qty","who","when","why"]);
+let decPrevTimer=null;
+async function loadFieldPicker(){
+  const r=await api("/api/fields",{slug:slug()}); const box=$("#decFieldPick"); if(r.error){ box.innerHTML=`<span class="hint">${esc(r.error)}</span>`; return; }
+  let saved=[]; try{ saved=JSON.parse(localStorage.getItem("decFields:"+slug())||"[]"); }catch(e){}
+  const fixed=r.fields.filter(f=>f.bound_as), free=r.fields.filter(f=>!f.bound_as);
+  $("#decFixed").innerHTML=`Always on the sheet: ${["mpn","sku","kind",...DEC_EDIT,"unpriced","price now","basis","cost","list","margin%"].map(c=>`<span class="chip">${esc(c)}</span>`).join("")}`
+    + (fixed.length?`<br>From your fields: ${fixed.map(f=>`<span class="chip" title="pricing.yaml binds it as ${esc(f.bound_as)}">${esc(f.name)} → ${esc(f.bound_as)}</span>`).join("")}`:"");
+  const bySrc={}; free.forEach(f=>{ (bySrc[f.source]=bySrc[f.source]||[]).push(f); });
+  box.innerHTML=`<div class="pick">`+Object.entries(bySrc).map(([src,fs])=>`<div class="src">${esc(src)} · ${esc(r.files[src]||"")}</div><div class="opts">${fs.map(f=>`<label class="inline"><input type="checkbox" data-f="${esc(f.name)}" ${saved.includes(f.name)?'checked':''}> ${esc(f.name)}</label>`).join("")}</div>`).join("")+`</div>`;
+  const sync=()=>{ const on=[...box.querySelectorAll("input[data-f]:checked")].map(i=>i.dataset.f); $("#decFields").value=on.join(","); try{ localStorage.setItem("decFields:"+slug(),JSON.stringify(on)); }catch(e){} clearTimeout(decPrevTimer); decPrevTimer=setTimeout(decPreview,350); };
+  box.querySelectorAll("input[data-f]").forEach(i=>i.onchange=sync); sync();
+}
+async function decPreview(){
+  $("#decPrevMeta").textContent="updating…";
+  const r=await api("/api/decision_preview",{slug:slug(),fields:$("#decFields").value});
+  if(r.error){ $("#decPrevMeta").textContent=""; $("#decPrev").innerHTML=`<div class="status bad">${esc(r.error)}</div>`; return; }
+  renderSheetPreview(r);
+}
+function renderSheetPreview(r){
+  $("#decPrevMeta").textContent=`${r.rows} rows × ${r.header.length} columns`;
+  const cnt=Object.entries(r.counts).map(([k,v])=>`${v} ${k}`).join(" · ");
+  $("#decPrevCounts").innerHTML=`Carry states: ${esc(cnt)}${r.unpriced?` · <b>${r.unpriced} unpriced</b>`:""}${r.written?` · written to <code>${esc(r.path)}</code>`:""}`;
+  const cls=h=>DEC_EDIT.has(h)?"you":(h==="mpn"?"key":"");
+  const th=r.header.map(h=>`<th class="${cls(h)}" title="${DEC_EDIT.has(h)?"you fill this in":(h==="mpn"?"the key — never change":"reference — ignored on import")}">${esc(h.replace(/^— /,""))}</th>`).join("");
+  const tr=r.preview.map(row=>`<tr>${row.map((c,i)=>`<td class="${cls(r.header[i])}" title="${esc(c)}">${esc(String(c))}</td>`).join("")}</tr>`).join("");
+  $("#decPrev").innerHTML=`<table><tr>${th}</tr>${tr}</table>`;
+}
+$("#decExportBtn").onclick = async()=>{ out("decExportOut","Writing the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows${r.unpriced?`, ${r.unpriced} unpriced`:""}. Click <b>Open in Excel</b>.`,"ok"); renderSheetPreview(r); };
+$("#decGoBuild").onclick = ()=>document.querySelector(".rail button[data-stage='build']").click();
+$("#decOpenBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened <code>${esc(r.opened)}</code> in Excel. Edit, save as CSV (same name), then Preview decisions.`,"ok"); };
+$("#decOpenDirBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value,folder:true}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened folder <code>${esc(r.opened)}</code>.`,"ok"); };
 $("#decPreviewBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
 $("#decApplyBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
 $("#catBtn").onclick = async()=>{ const r=await api("/api/catalog",{slug:slug()}); if(r.error) return out("catOut",esc(r.error),"bad");

@@ -1,0 +1,68 @@
+# canonical field -> source column. primary ELSE aliases (FR-18); disagreement halts (D-7).
+fields:
+  sku:
+    primary:
+      source: S1
+      column: SKU
+    confirmed: Y
+    required: true
+  title:
+    primary:
+      source: S1
+      column: Title
+    confirmed: Y
+    required: true
+  category:
+    primary:
+      source: S1
+      column: Category
+    confirmed: Y
+  manufacturer:
+    primary:
+      source: S1
+      column: Manufacturer
+    confirmed: Y
+  product_description:
+    primary:
+      source: S1
+      column: Product Description
+    confirmed: Y
+  country_of_origin:
+    primary:
+      source: S1
+      column: Country of Origin
+    confirmed: Y
+  url_of_the_product:
+    primary:
+      source: S1
+      column: URL of the Product
+    confirmed: Y
+  image_url:
+    primary:
+      source: S1
+      column: Image URL
+    confirmed: Y
+  msrp_price:
+    primary:
+      source: S1
+      column: MSRP Price
+    type: number
+    confirmed: Y
+  weight:
+    primary:
+      source: S1
+      column: Weight
+    confirmed: Y
+  dimensions:
+    primary:
+      source: S1
+      column: Dimensions
+    confirmed: Y
+  category_discount:
+    primary:
+      source: S2
+      column: CATEGORY DISCOUNT
+  discount_price_usd:
+    primary:
+      source: S2
+      column: DISCOUNT PRICE USD

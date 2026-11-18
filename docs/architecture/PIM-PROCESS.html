@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIM III Process</title>
+<style>
+  :root{--bg:#faf9f7;--fg:#1f2328;--muted:#6b7280;--line:#8a8f98;--box:#fff;--done:#2f7d4f;--plan:#8a8f98;--you:#c2600a;--youbg:#fdf3e7}
+  @media (prefers-color-scheme:dark){:root{--bg:#16181d;--fg:#e6e8eb;--muted:#9aa1ab;--line:#5c6370;--box:#1e2128;--done:#5fbf86;--plan:#7d8694;--you:#f0a24a;--youbg:#2a2118}}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;height:100%}
+  header{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+  header h1{font-size:16px;margin:0 12px 0 0}
+  .key{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .key i{display:inline-block;width:22px;height:0;border-top:2px solid var(--done);vertical-align:middle;margin-right:5px}
+  .key i.p{border-top:2px dashed var(--plan)} .key i.y{border-top:2px solid var(--you)}
+  button{margin-left:auto;font:inherit;font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--box);color:var(--fg);cursor:pointer}
+  #wrap{position:absolute;top:49px;bottom:0;left:0;right:0;overflow:hidden;cursor:grab;touch-action:none}
+  #wrap.drag{cursor:grabbing}
+  svg{width:100%;height:100%;display:block;color:var(--fg)}
+  .b{fill:var(--box);stroke:var(--done);stroke-width:1.6}
+  .b.p{stroke:var(--plan);stroke-dasharray:6 4}
+  .y{fill:var(--youbg);stroke:var(--you);stroke-width:1.6}
+  .f{stroke:var(--fg);stroke-width:1.5;fill:none}
+  .f.p{stroke-dasharray:6 4;stroke:var(--plan)}
+  .t{font-size:13px;font-weight:600;fill:var(--fg)} .s{font-size:11px;fill:var(--muted)}
+  .ph{font-size:11px;font-weight:700;letter-spacing:.08em} .ph.d{fill:var(--done)} .ph.p{fill:var(--plan)}
+  .yt{font-size:11px;font-weight:700;fill:var(--you)} .l{font-size:11px;fill:var(--fg)}
+</style>
+</head>
+<body>
+<header>
+  <h1>PIM III process</h1>
+  <div class="key"><span><i></i>built (M0, M1, M2a)</span><span><i class="p"></i>planned</span><span><i class="y"></i>you decide</span><span>wheel = zoom · drag = pan</span></div>
+  <button id="reset" type="button">Reset view</button>
+</header>
+<div id="wrap">
+<svg id="d" viewBox="0 0 1180 420" role="img" aria-label="PIM III: brand files and a brand pack feed Build, which makes one row per vendor part number; Decide turns that into one row per Castletronics SKU using your decision sheet, packs, kits and pricing rules; Derive and Publish are planned, publishing either straight to BigCommerce or through the CT Hub, which is still an open question.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+    <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--plan)"/></marker>
+  </defs>
+
+  <!-- inputs -->
+  <rect class="b" x="20" y="60" width="170" height="54" rx="8"/>
+  <text class="t" x="105" y="83" text-anchor="middle">Brand files</text>
+  <text class="s" x="105" y="100" text-anchor="middle">xlsx · csv · json, read-only</text>
+  <rect class="b" x="20" y="150" width="170" height="54" rx="8"/>
+  <text class="t" x="105" y="173" text-anchor="middle">Brand pack</text>
+  <text class="s" x="105" y="190" text-anchor="middle">declarations, no code</text>
+  <line class="f" x1="190" y1="87" x2="248" y2="124" marker-end="url(#a)"/>
+  <line class="f" x1="190" y1="177" x2="248" y2="140" marker-end="url(#a)"/>
+
+  <!-- 1 build -->
+  <text class="ph d" x="250" y="46">1 · BUILD</text>
+  <rect class="b" x="250" y="60" width="210" height="144" rx="10"/>
+  <text class="t" x="355" y="86" text-anchor="middle">Assemble by part number</text>
+  <text class="s" x="355" y="106" text-anchor="middle">validate pack · read · normalize</text>
+  <text class="s" x="355" y="122" text-anchor="middle">merge on MPN · your overrides</text>
+  <text class="s" x="355" y="146" text-anchor="middle">→ one row per vendor MPN</text>
+  <text class="s" x="355" y="162" text-anchor="middle">database + rows.jsonl</text>
+  <text class="s" x="355" y="186" text-anchor="middle">Lindström: 322 rows, clean</text>
+  <line class="f" x1="460" y1="132" x2="518" y2="132" marker-end="url(#a)"/>
+
+  <!-- 2 decide -->
+  <text class="ph d" x="520" y="46">2 · DECIDE</text>
+  <rect class="b" x="520" y="60" width="210" height="144" rx="10"/>
+  <text class="t" x="625" y="86" text-anchor="middle">What the store carries</text>
+  <text class="s" x="625" y="106" text-anchor="middle">carry / skip · packs · kits</text>
+  <text class="s" x="625" y="122" text-anchor="middle">pricing rules · qty · fulfillment</text>
+  <text class="s" x="625" y="146" text-anchor="middle">→ one row per CT SKU</text>
+  <text class="s" x="625" y="162" text-anchor="middle">59.MSF · 59.MSF.P5 · 59.MS-KIT5</text>
+  <text class="s" x="625" y="186" text-anchor="middle">Lindström: 324 catalog rows</text>
+  <line class="f p" x1="730" y1="132" x2="788" y2="132" marker-end="url(#ap)"/>
+
+  <!-- 3 derive + publish -->
+  <text class="ph p" x="790" y="46">3 · DERIVE + PUBLISH (next)</text>
+  <rect class="b p" x="790" y="60" width="210" height="144" rx="10"/>
+  <text class="t" x="895" y="86" text-anchor="middle">Shape it, then ship it</text>
+  <text class="s" x="895" y="106" text-anchor="middle">field review · facets · packing</text>
+  <text class="s" x="895" y="122" text-anchor="middle">families · SEO · customs</text>
+  <text class="s" x="895" y="146" text-anchor="middle">diff → snapshot → staged write</text>
+  <text class="s" x="895" y="162" text-anchor="middle">→ verify → rollback if needed</text>
+  <text class="s" x="895" y="186" text-anchor="middle">M2b, M3–M5</text>
+
+  <!-- terminus fork -->
+  <line class="f p" x1="1000" y1="110" x2="1058" y2="92" marker-end="url(#ap)"/>
+  <line class="f p" x1="1000" y1="154" x2="1058" y2="172" marker-end="url(#ap)"/>
+  <rect class="b p" x="1060" y="66" width="105" height="44" rx="8"/>
+  <text class="t" x="1112" y="85" text-anchor="middle">BigCommerce</text>
+  <text class="s" x="1112" y="101" text-anchor="middle">direct, via API</text>
+  <rect class="b p" x="1060" y="150" width="105" height="44" rx="8"/>
+  <text class="t" x="1112" y="169" text-anchor="middle">CT Hub</text>
+  <text class="s" x="1112" y="185" text-anchor="middle">import door</text>
+  <text class="s" x="1112" y="216" text-anchor="middle">which one: open (OQ-21)</text>
+
+  <!-- you decide -->
+  <rect class="y" x="250" y="250" width="210" height="60" rx="8"/>
+  <text class="yt" x="262" y="268">YOU</text>
+  <text class="t" x="355" y="286" text-anchor="middle">Field edits in Excel</text>
+  <text class="s" x="355" y="301" text-anchor="middle">CSV out → edit → in as overrides</text>
+  <line class="f" x1="355" y1="250" x2="355" y2="206" marker-end="url(#a)"/>
+
+  <rect class="y" x="520" y="250" width="210" height="60" rx="8"/>
+  <text class="yt" x="532" y="268">YOU</text>
+  <text class="t" x="625" y="286" text-anchor="middle">Decision sheet in Excel</text>
+  <text class="s" x="625" y="301" text-anchor="middle">one row per SKU · validated on import</text>
+  <line class="f" x1="625" y1="250" x2="625" y2="206" marker-end="url(#a)"/>
+
+  <rect class="y" x="790" y="250" width="210" height="60" rx="8"/>
+  <text class="yt" x="802" y="268">YOU</text>
+  <text class="t" x="895" y="286" text-anchor="middle">Confirm big changes</text>
+  <text class="s" x="895" y="301" text-anchor="middle">approve any rollback</text>
+  <line class="f p" x1="895" y1="250" x2="895" y2="206" marker-end="url(#ap)"/>
+
+  <!-- halts -->
+  <text class="s" x="355" y="345" text-anchor="middle">Build halts when sources disagree — you rule by override.</text>
+  <text class="s" x="625" y="345" text-anchor="middle">Gates: undecided = 0, SKUs unique, every row priced or marked.</text>
+  <text class="s" x="895" y="345" text-anchor="middle">Never writes without a diff you saw and a backup it took.</text>
+
+  <!-- window -->
+  <text class="l" x="20" y="395">The PIM window (PIM.bat) walks these as stages: Brand &amp; files → What changed → Build → Decide → Derive &amp; review → Publish.</text>
+</svg>
+</div>
+<script>
+(function(){
+  var svg=document.getElementById('d'),wrap=document.getElementById('wrap');
+  var home={x:0,y:0,w:1180,h:420},v={x:0,y:0,w:1180,h:420};
+  function apply(){svg.setAttribute('viewBox',v.x+' '+v.y+' '+v.w+' '+v.h)}
+  function pt(e){var r=svg.getBoundingClientRect();var sx=v.w/r.width,sy=v.h/r.height;var s=Math.max(sx,sy);
+    var ox=(r.width-v.w/s)/2,oy=(r.height-v.h/s)/2;return{x:v.x+(e.clientX-r.left-ox)*s,y:v.y+(e.clientY-r.top-oy)*s,s:s}}
+  wrap.addEventListener('wheel',function(e){e.preventDefault();var p=pt(e);var k=e.deltaY<0?0.85:1/0.85;
+    var nw=Math.min(Math.max(v.w*k,120),4000),nh=v.h*(nw/v.w);
+    v.x=p.x-(p.x-v.x)*(nw/v.w);v.y=p.y-(p.y-v.y)*(nh/v.h);v.w=nw;v.h=nh;apply()},{passive:false});
+  var drag=null;
+  wrap.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,vx:v.x,vy:v.y,s:pt(e).s};wrap.classList.add('drag');wrap.setPointerCapture(e.pointerId)});
+  wrap.addEventListener('pointermove',function(e){if(!drag)return;v.x=drag.vx-(e.clientX-drag.x)*drag.s;v.y=drag.vy-(e.clientY-drag.y)*drag.s;apply()});
+  wrap.addEventListener('pointerup',function(){drag=null;wrap.classList.remove('drag')});
+  wrap.addEventListener('pointercancel',function(){drag=null;wrap.classList.remove('drag')});
+  document.getElementById('reset').addEventListener('click',function(){v={x:home.x,y:home.y,w:home.w,h:home.h};apply()});
+})();
+</script>
+</body>
+</html>

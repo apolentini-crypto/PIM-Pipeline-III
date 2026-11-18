@@ -191,7 +191,7 @@ def _grammar():
     return SkuGrammar.from_store(load_store(STORE_PATH))
 
 
-def export_decision_sheet(pack_dir: Path, var_dir: Path, extra_fields: list[str], out: Path | None = None, *, source_root_override: Path | None = None) -> dict:
+def export_decision_sheet(pack_dir: Path, var_dir: Path, extra_fields: list[str], out: Path | None = None, *, source_root_override: Path | None = None, write: bool = True) -> dict:
     """Dry-run build, then write the one-row-per-CT-SKU sheet. Returns path, counts and a preview."""
     from pim.decide.core import decision_sheet_rows, load_decisions, load_derivatives, write_sheet
     rep = validate_pack(pack_dir)
@@ -204,14 +204,15 @@ def export_decision_sheet(pack_dir: Path, var_dir: Path, extra_fields: list[str]
     header, rows = decision_sheet_rows(r.rows, load_decisions(pack_dir), load_derivatives(pack_dir), pricing, extra_fields,
                                        catalog=r.catalog, brand=brand, grammar=_grammar())
     out = out or (var_dir / brand.slug / "edits" / f"{brand.slug}-decisions.csv")
-    write_sheet(out, header, rows)
+    if write:
+        write_sheet(out, header, rows)
     counts: dict[str, int] = {}
     kinds: dict[str, int] = {}
     for row in rows:
         counts[row[3]] = counts.get(row[3], 0) + 1
         k = "pack" if row[2].startswith("pack") else row[2]
         kinds[k] = kinds.get(k, 0) + 1
-    return {"path": str(out), "rows": len(rows), "counts": counts, "kinds": kinds, "header": header, "preview": rows[:12],
+    return {"path": str(out), "written": write, "rows": len(rows), "counts": counts, "kinds": kinds, "header": header, "preview": rows[:12],
             "unpriced": sum(1 for row in rows if row[header.index("— unpriced")] == "yes")}
 
 

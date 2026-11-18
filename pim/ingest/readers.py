@@ -233,5 +233,19 @@ def read_source(source: Source, root: Path) -> tuple[list[RawFrame], SourceStamp
         if source.optional:
             return [], None
         raise IngestError(f"{source.id}: file not found: {path}")
-    frames = READERS[source.format](source, path)
-    return frames, _stamp(source, path)
+    try:
+        frames = READERS[source.format](source, path)
+        return frames, _stamp(source, path)
+    except PermissionError as e:
+        raise IngestError(_locked_message(source, path)) from e
+
+
+def _locked_message(source: Source, path: Path) -> str:
+    """Windows refuses a read of a workbook that Excel has open (AutoSave on a OneDrive file
+    holds it exclusively). Say so in plain words — the raw PermissionError reads like a bug."""
+    return (
+        f"Can't read {path.name} ({source.id}) — Windows says it is in use by another program.\n"
+        f"  Most likely it is open in Excel. Close that workbook (check Task Manager for a leftover\n"
+        f"  Excel.exe), then run the build again. The file itself was not touched.\n"
+        f"  Full path: {path}"
+    )

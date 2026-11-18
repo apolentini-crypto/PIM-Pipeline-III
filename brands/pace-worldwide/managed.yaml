@@ -1,0 +1,18 @@
+# Managed fields and owners (FR-54..56). Confirmed fields are owned by `catalog`.
+managed: all-mapped
+unmanaged:
+- inventory_level
+- is_visible
+- sale_price
+owners:
+  sku: catalog
+  title: catalog
+  category: catalog
+  manufacturer: catalog
+  product_description: catalog
+  country_of_origin: catalog
+  url_of_the_product: catalog
+  image_url: catalog
+  msrp_price: catalog
+  weight: catalog
+  dimensions: catalog

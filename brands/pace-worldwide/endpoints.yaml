@@ -1,0 +1,22 @@
+# canonical -> endpoint field map (FR-104). Rename the right-hand side to the BC field names.
+endpoints:
+  bc:
+    adapter: bigcommerce
+    environments:
+    - sandbox
+    - live
+    field_map:
+      sku: sku
+      title: title
+      category: category
+      manufacturer: manufacturer
+      product_description: product_description
+      country_of_origin: country_of_origin
+      url_of_the_product: url_of_the_product
+      image_url: image_url
+      msrp_price: msrp_price
+      weight: weight
+      dimensions: dimensions
+    custom_fields: []
+    sentinel_empty_fields:
+    - related_products

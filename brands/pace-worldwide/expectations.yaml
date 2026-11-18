@@ -1,0 +1,3 @@
+# Asserted counts; the build halts when measured != expected.
+roster_count: null
+tolerance: 0
