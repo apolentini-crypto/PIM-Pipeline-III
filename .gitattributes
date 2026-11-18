@@ -11,3 +11,6 @@
 
 # Markdown docs diff by paragraph
 *.md diff=markdown
+
+# Windows batch files must keep CRLF in the working tree (cmd's goto misbehaves with LF)
+*.bat text eol=crlf
