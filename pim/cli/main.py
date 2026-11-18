@@ -217,8 +217,9 @@ def cmd_seed_decisions(args) -> int:
 
 def cmd_ui(args) -> int:
     from pim.ui.server import serve
-    # 75 tells PIM.bat the window's code changed and it should start again (without a new browser tab)
-    return 75 if serve(port=args.port, open_browser=not args.no_browser) else 0
+    # Exit codes PIM.bat acts on: 75 = the window's code changed, start again (no new browser tab);
+    # 3 = a PIM window is already running, nothing was started (its tab was opened); 4 = the port is taken.
+    return {"restart": 75, "already-running": 3, "port-busy": 4}.get(serve(port=args.port, open_browser=not args.no_browser), 0)
 
 
 def cmd_status(args) -> int:

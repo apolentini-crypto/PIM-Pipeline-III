@@ -153,3 +153,97 @@ def test_code_change_is_detected(monkeypatch):
     assert not s._code_stamp() > s.CODE_STAMP            # unchanged since import
     monkeypatch.setattr(s, "CODE_STAMP", 0.0)
     assert s._code_stamp() > s.CODE_STAMP                # any newer file counts as a change
+
+
+# ---- one window only (2026-11-18): a second launch never starts a second server -------------------
+def _free_port():
+    import socket
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def _run_window(port):
+    import threading
+    from pim.ui import server as S
+    srv = S._make_server(port)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv
+
+
+def _no_second_server(monkeypatch):
+    from pim.ui import server as S
+    def refuse(port):
+        raise AssertionError("a second PIM server was started")
+    monkeypatch.setattr(S, "_make_server", refuse)
+
+
+def test_second_launch_opens_the_running_window_and_starts_nothing(monkeypatch):
+    from pim.ui import server as S
+    port = _free_port(); first = _run_window(port)
+    opened = []; monkeypatch.setattr(S.webbrowser, "open", lambda u: opened.append(u))
+    _no_second_server(monkeypatch)
+    try:
+        assert S.serve(port=port, open_browser=True) == "already-running"
+        assert opened == [f"http://127.0.0.1:{port}/"]          # the running window is shown instead
+        assert S.probe(port)["kind"] == "pim"                     # and it is still running, untouched
+        assert S._http(port, "/api/shutdown", post=True)[0] == 404   # nothing can stop it from outside any more
+        assert S.probe(port)["kind"] == "pim"
+    finally:
+        first.shutdown(); first.server_close()
+
+
+def test_running_window_on_older_code_is_asked_to_restart_itself(monkeypatch):
+    from pim.ui import server as S
+    port = _free_port(); first = _run_window(port)
+    monkeypatch.setattr(S, "CODE_STAMP", -1.0)                    # the running window's code is older than the files
+    monkeypatch.setattr(S, "_wait", lambda cond, seconds: True)   # PIM.bat would relaunch it; there is no PIM.bat here
+    monkeypatch.setattr(S.webbrowser, "open", lambda u: None)
+    _no_second_server(monkeypatch)
+    try:
+        assert S.serve(port=port, open_browser=True) == "already-running"
+        assert S.RESTART.is_set()                                  # it was asked to restart (exit 75) — not killed
+    finally:
+        S.RESTART.clear(); first.server_close()
+
+
+def test_port_held_by_another_program_is_left_alone(monkeypatch):
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from pim.ui import server as S
+    class Other(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200); self.end_headers(); self.wfile.write(b"some other program")
+        def log_message(self, *a):
+            pass
+    port = _free_port(); other = HTTPServer(("127.0.0.1", port), Other)
+    threading.Thread(target=other.serve_forever, daemon=True).start()
+    _no_second_server(monkeypatch)
+    try:
+        assert S.probe(port) == {"kind": "other"}
+        assert S.serve(port=port, open_browser=False) == "port-busy"
+    finally:
+        other.shutdown(); other.server_close()
+
+
+def test_two_launches_at_the_same_moment_end_with_one_window(monkeypatch):
+    from pim.ui import server as S
+    port = _free_port(); first = _run_window(port)
+    real_probe = S.probe; calls = []
+    def racing_probe(p):                      # the 2nd launch looked before the 1st was listening
+        calls.append(p)
+        return None if len(calls) == 1 else real_probe(p)
+    monkeypatch.setattr(S, "probe", racing_probe)
+    monkeypatch.setattr(S.webbrowser, "open", lambda u: None)
+    try:
+        assert S.serve(port=port, open_browser=False) == "already-running"   # its bind was refused; it found the 1st
+        assert real_probe(port)["kind"] == "pim"
+    finally:
+        first.shutdown(); first.server_close()
+
+
+def test_windows_bind_refuses_a_second_listener():
+    import os
+    from pim.ui import server as S
+    # Python's HTTPServer sets SO_REUSEADDR, which on Windows lets two processes listen on one port
+    assert S._OneWindowServer.allow_reuse_address is (os.name != "nt")

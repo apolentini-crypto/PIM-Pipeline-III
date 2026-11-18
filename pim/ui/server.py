@@ -731,10 +731,6 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(pack_fields(body.get("slug", "")))
             elif path == "/api/open":
                 self._json(open_local(body.get("path", ""), bool(body.get("folder"))))
-            elif path == "/api/shutdown":
-                # local-only: a newer PIM window asks this one to stop (PIM.bat restart)
-                self._json({"stopping": True})
-                threading.Thread(target=self.server.shutdown, daemon=True).start()
             elif path == "/api/restart":
                 # the page saw that the window's code changed; stop with exit code 75 so PIM.bat starts the new code
                 if not _code_stamp() > CODE_STAMP:
@@ -749,32 +745,112 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": f"{type(e).__name__}: {e}"}, 500)
 
 
-def _stop_previous(port: int) -> bool:
-    import urllib.request, time, socket
+# ---- one window only (2026-11-18, Tony: "limit only 1 server instance, similar to the CT Hub").
+# Same shape as CT Hub's FR-150 guard: ask first whether a PIM already ANSWERS the port; if one
+# does, do not start — open the browser to the running one instead (PIM.bat exit code 3).
+# Second guard: on Windows, Python's HTTPServer sets SO_REUSEADDR, which lets TWO processes listen
+# on one port at once (the Hub measured exactly that on :3000). PIM binds without it, so the port
+# itself is the lock: if two cold starts race, the second bind fails and it finds the first.
+import os as _os
+
+
+class _OneWindowServer(ThreadingHTTPServer):
+    # Windows: without SO_REUSEADDR a second bind to a port that is being listened on fails (WSAEADDRINUSE),
+    # and a restart can still rebind at once (Windows does not hold a closed listener's port the way Linux
+    # does). SO_EXCLUSIVEADDRUSE is deliberately NOT used: it can refuse the rebind after a restart while
+    # old connections drain. Linux/macOS: SO_REUSEADDR never allows two listeners there and is needed to restart.
+    allow_reuse_address = _os.name != "nt"
+    daemon_threads = True
+
+
+def _http(port: int, path: str, *, post: bool = False, timeout: float = 0.7):
+    """(status, body-text) from 127.0.0.1:<port>, or None when nothing answers."""
+    import urllib.error, urllib.request
+    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=b"{}" if post else None,
+                                 headers={"Content-Type": "application/json"})
     try:
-        urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/api/shutdown", data=b"{}", headers={"Content-Type": "application/json"}), timeout=3).read()
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8", "replace")
     except Exception:
-        return False
-    for _ in range(40):
+        return None
+
+
+def probe(port: int) -> dict | None:
+    """Who is on the port? None = nobody. {"kind": "pim", boot, code_changed} = a current PIM window.
+    {"kind": "old-pim"} = a PIM from before the ping existed. {"kind": "other"} = some other program."""
+    r = _http(port, "/api/ping")
+    if r is None:
+        return None
+    status, text = r
+    if status == 200:
+        try:
+            d = json.loads(text)
+            if "boot" in d:
+                return {"kind": "pim", "boot": d["boot"], "code_changed": bool(d.get("code_changed"))}
+        except ValueError:
+            pass
+    home = _http(port, "/")
+    if home and "<title>PIM</title>" in home[1]:
+        return {"kind": "old-pim"}
+    return {"kind": "other"}
+
+
+def _wait(cond, seconds: float) -> bool:
+    import time
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        if cond():
+            return True
         time.sleep(0.25)
-        with socket.socket() as s:
-            if s.connect_ex(("127.0.0.1", port)) != 0:
-                return True
-    return False
+    return cond()
 
 
-def serve(port: int = 8766, open_browser: bool = True) -> bool:
-    """Run the window. Returns True when it stopped because the page asked for a restart."""
+def _make_server(port: int) -> ThreadingHTTPServer:
+    return _OneWindowServer(("127.0.0.1", port), Handler)
+
+
+def serve(port: int = 8766, open_browser: bool = True) -> str:
+    """Run the window. Returns why it ended: "restart" (the page asked; PIM.bat starts it again),
+    "stopped", "already-running" (another PIM owns the port; nothing was started) or "port-busy"."""
     from pim import __version__
-    try:
-        srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    except OSError:
-        print(f"A PIM window is already running on port {port} — asking it to stop ...")
-        if not _stop_previous(port):
-            print(f"Could not stop it. Close the other PIM console window, then run PIM.bat again.")
-            return
-        srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = f"http://127.0.0.1:{port}/"
+    who = probe(port)
+    if who and who["kind"] == "pim":
+        if who["code_changed"]:
+            # it is running older code: ask it to restart itself (its PIM.bat relaunches it), then show it
+            print("PIM is already running, on older code - asking it to restart itself ...")
+            _http(port, "/api/restart", post=True, timeout=3)
+            _wait(lambda: (probe(port) or {}).get("boot") not in (None, who["boot"]), 30)
+        print(f"PIM is already running: {url} - not starting a second one.")
+        if open_browser:
+            webbrowser.open(url)
+        return "already-running"
+    if who and who["kind"] == "old-pim":
+        # one-time migration: a window from before this guard cannot restart itself; ask it to stop
+        print("An older PIM window is running - asking it to close so this one can take over ...")
+        _http(port, "/api/shutdown", post=True, timeout=3)
+        _wait(lambda: probe(port) is None, 10)
+    elif who:
+        print(f"Port {port} is in use by another program, not PIM. Close it, then run PIM.bat again.")
+        return "port-busy"
+    srv = None
+    for _ in range(40):                  # ~10 s: a window that just restarted may still be letting go of the port
+        try:
+            srv = _make_server(port)
+            break
+        except OSError:
+            again = probe(port)
+            if again and again["kind"] == "pim":        # lost a simultaneous start to another PIM: use that one
+                print(f"PIM is already running: {url} - not starting a second one.")
+                if open_browser:
+                    webbrowser.open(url)
+                return "already-running"
+            import time; time.sleep(0.25)
+    if srv is None:
+        print(f"Port {port} is in use and nothing on it answers. Close any other PIM console window, then run PIM.bat again.")
+        return "port-busy"
     print(f"PIM v{__version__}")
     print(f"PIM window: {url}   (close this console window to stop)")
     if open_browser:
@@ -785,4 +861,4 @@ def serve(port: int = 8766, open_browser: bool = True) -> bool:
         pass
     finally:
         srv.server_close()
-    return RESTART.is_set()
+    return "restart" if RESTART.is_set() else "stopped"
