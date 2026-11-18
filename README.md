@@ -5,19 +5,17 @@ product information from an arbitrary set of vendor files, aligned to a product
 code, into one complete record per SKU — then publish that database to sales
 channels, validated, verified and reversible.
 
-**Nothing is implemented yet.** This repository holds requirements, architecture
-and measured data analysis.
-
-> **Picking this up cold — start with [HANDOFF.md](HANDOFF.md).** It is
-> self-contained: current state, binding decisions, open questions, where the
-> source data lives, and the next steps in order.
+**Built:** M0 (pack validation, SKU grammar), M1 (build), the local window (`PIM.bat`),
+M2a (Decide). **Not built yet:** Derive and Publish (M2b, M3–M5). Brand packs: Lindström,
+Pace Worldwide.
 
 ## Documents
 
 | Path | What it is |
 |---|---|
-| [HANDOFF.md](HANDOFF.md) | **Start here.** Session handoff — state, decisions, open questions, next steps. |
 | [docs/requirements/PIM-BASELINE-REQUIREMENTS.md](docs/requirements/PIM-BASELINE-REQUIREMENTS.md) | **`CT-PIM-SRS-001` v1.0 — BASELINED, BINDING.** The single requirements specification: merges and supersedes both source specs, with a conflict-resolution log (§12) and full traceability (§13). Where anything disagrees, this document wins. |
+| [docs/requirements/PIM-SRS-A1-CATALOG-DECISIONS.md](docs/requirements/PIM-SRS-A1-CATALOG-DECISIONS.md) | `CT-PIM-SRS-001-A1` v0.3 — **approved** amendment adding Stage 2b Decide (carry states, packs and kits, SKU grammar D-8, pricing, decision sheet). FR-140..173a. |
+| `README-M0.md` · `README-M1.md` · `README-UI.md` · `README-M2a.md` | Milestone notes: what each built, how it runs, snags found. |
 | [docs/architecture/PIM-ARCHITECTURE-DESIGN.md](docs/architecture/PIM-ARCHITECTURE-DESIGN.md) | `CT-PIM-ARCH-001` v1.0 — top-down architecture and design: ADRs, codebase layout, SQLite schema, brand-pack design, BigCommerce adapter, verification framework, CLI, testing strategy, M0–M6 roadmap. |
 | [docs/architecture/PIM-WORKFLOW.html](docs/architecture/PIM-WORKFLOW.html) | The system workflow diagram — data flow and the operator control points. Open in a browser. |
 | [docs/data/LINDSTROM-DATA-PROFILE.md](docs/data/LINDSTROM-DATA-PROFILE.md) | `CT-PIM-DATA-001` — measured column-level profile of the real Lindström sources: lineage, key spaces, coverage, format hazards, defects found. |
@@ -39,13 +37,13 @@ and measured data analysis.
   relationships. No field name, brand, count, or format in code.
 - **D-7** **Primary/alias conflicts halt** for operator ruling via override; neither
   value ships un-ruled.
+- **D-8** (A1, 2026-10-18) SKU grammar `{brand}.{mpn}[-{cond}][.M|.n|.P<qty>]` — dots between
+  the parts, never a dash after the brand number.
 
 Mandatory guarantees: nothing unwritable · backup and rollback on every run ·
 per-field change selection · CSV export/import for bulk edits.
 
-Open questions are tracked in the baseline spec **§11.2** and summarised in
-[HANDOFF.md](HANDOFF.md) §4 — OQ-1 and OQ-2 block migration; OQ-16/17 affect the
-Lindström pack.
+Open questions are tracked in the baseline spec **§11.2** and A1 **§6**.
 
 ## Ground rules carried forward from the first-generation loader
 
