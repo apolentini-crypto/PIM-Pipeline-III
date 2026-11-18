@@ -91,6 +91,40 @@ label>.cap{margin-top:.1rem}
 .ready li.todo{color:var(--warn)}
 .ready li.opt{color:var(--muted)} .ready li.opt::before{content:"– "}
 .st-unchanged{color:var(--ok)} .st-changed{color:var(--warn);font-weight:600} .st-new{color:var(--accent);font-weight:600} .st-missing{color:var(--bad);font-weight:600}
+.stage.dec{max-width:1400px}
+.lead{margin:.1rem 0 .4rem;font-size:.95rem}
+.howto{margin:0 0 .6rem;font-size:.85rem} .howto ul{margin:.4rem 0 0;padding-left:1.2rem;max-width:62rem} .howto li{margin:.2rem 0}
+.tabs{display:flex;gap:.25rem;border-bottom:1px solid var(--line);margin:.2rem 0 .8rem;align-items:end;flex-wrap:wrap}
+.tabs button{background:none;color:var(--muted);border:0;border-bottom:2px solid transparent;border-radius:0;padding:.35rem .8rem}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tabs .hint{margin-left:auto;padding-bottom:.35rem}
+.steps{display:flex;list-style:none;padding:0;margin:0 0 .75rem;flex-wrap:wrap}
+.steps li{flex:1;min-width:8.5rem;display:flex;align-items:center;gap:.45rem;padding:.45rem .7rem;background:var(--panel);border:1px solid var(--line);margin-right:-1px;font-size:.85rem;color:var(--muted)}
+.steps li:first-child{border-radius:8px 0 0 8px} .steps li:last-child{border-radius:0 8px 8px 0;margin-right:0}
+.steps li i{font-style:normal;display:inline-grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:50%;background:var(--line);color:var(--fg);font-size:.72rem;flex:none}
+.steps li small{display:block;font-size:.72rem;font-weight:400;color:var(--muted)}
+.steps li.done{color:var(--ok)} .steps li.done i{background:var(--ok);color:#fff}
+.steps li.next{color:var(--accent);background:var(--accent-bg);border-color:var(--accent);font-weight:600;position:relative;z-index:1} .steps li.next i{background:var(--accent);color:#fff}
+.dec-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:.75rem;align-items:start}
+@media (max-width:900px){.dec-grid{grid-template-columns:1fr}}
+.sheetline{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;font-size:.9rem;margin-bottom:.6rem}
+.sheetline .fn{font-family:var(--mono);font-weight:600}
+.sheetline .when{color:var(--muted);font-size:.8rem}
+.sign{margin:.7rem 0 .5rem}
+.summary h3{margin:0 0 .45rem;font-size:.85rem;color:var(--muted);font-weight:600}
+.summary .big{font-size:1.7rem;font-weight:700;line-height:1.1}
+.summary .kv{grid-template-columns:1fr auto;font-size:.85rem} .summary .kv b{text-align:right;overflow-wrap:anywhere}
+details.more{margin-top:.8rem;border-top:1px solid var(--line);padding-top:.5rem}
+.picksearch{margin:.2rem 0 .3rem;min-width:16rem}
+.prev{max-height:60vh} .prev th{max-width:none}
+.prev th:nth-child(1),.prev td:nth-child(1){position:sticky;left:0;min-width:7rem;max-width:7rem}
+.prev th:nth-child(2),.prev td:nth-child(2){position:sticky;left:7rem;min-width:8.5rem;max-width:8.5rem;box-shadow:1px 0 0 var(--line)}
+.prev td:nth-child(2){background:#fff} .prev th:nth-child(1),.prev th:nth-child(2){z-index:2}
+.res .grid{max-height:300px;margin-top:.4rem} .res tr.err td{background:var(--bad-bg);color:var(--bad)}
+aside.summary{position:static;height:auto;top:auto;overflow:visible;background:var(--panel);border-left:1px solid var(--line)}
+.prev tr td:first-child,.res .grid tr td:first-child{color:var(--fg);text-align:left;cursor:default}
+.prev tr td:first-child:hover,.res .grid tr td:first-child:hover{color:var(--fg);text-decoration:none}
+.res tr.err td:first-child{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -231,58 +265,64 @@ It writes the brand's setup files (the YAML on the right). You answer five thing
   </div>
 </section>
 
-<div class="layout" id="stage-decide" hidden>
-<main>
-  <div class="guide"><b>What this stage does</b> You decide what the store sells (A), and fix any wrong data values (B). Nothing here touches the store. Packs and kits are set from the sheet or in <code>derivatives.csv</code>; pricing rules live in <code>pricing.yaml</code>. <b>Next:</b> after <b>Apply</b>, go to <b>3 Build</b> and build again.</div>
+<section class="stage dec" id="stage-decide" hidden>
+  <p class="lead">Decide what the store sells: carry or skip each product, add packs and kits, set prices. Nothing here touches the store.</p>
+  <details class="howto"><summary>How the decision sheet works</summary>
+    <ul>
+      <li>One row per CT SKU: every vendor part number, each pack under its parent, kits at the end.</li>
+      <li>You fill in the <span class="sw you"></span> shaded columns in Excel: <code>carry_state</code> (<b>carry</b>, <b>skip</b>, or <i>derivatives-only</i> / <i>carry+derivatives</i> when a row gets packs or kits), and optionally <code>hold_reason</code>, <code>fulfillment</code>, <code>initial_qty</code>, a hand-set <code>price</code> (beats every rule) and <code>new_pack_qty</code> (<code>5</code> or <code>5;10</code>) to add packs.</li>
+      <li><code>mpn</code> is the key — never change it. The other columns are reference and are ignored on import. Save as CSV, same name.</li>
+      <li>Preview checks every cell and refuses the sheet while any error stands. Apply writes <code>decisions/decisions.csv</code> (and <code>derivatives.csv</code> for new packs). Build again so the catalog reflects it.</li>
+      <li>Packs: N × each for cost, list and weight; dimensions are never computed. Kits are set in <code>derivatives.csv</code> (<code>kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,…</code>) and sum their components. Pricing rules live in <code>pricing.yaml</code>.</li>
+    </ul>
+  </details>
+  <div class="tabs"><button class="on" data-dtab="dec">What to carry</button><button data-dtab="fix">Fix field values</button></div>
 
-  <div class="card">
-    <b style="font-size:1rem">A. Decision sheet — what to carry</b>
-    <p class="hint" style="margin:.2rem 0 .6rem">One row per product (and per pack or kit). You fill in the shaded columns in Excel; the rest are reference and come back untouched. The preview on the right shows the sheet as it will be written.</p>
-
-    <h2 style="margin-top:.6rem"><span class="n">1</span>Choose reference columns</h2>
-    <div class="hint" id="decFixed" style="margin-bottom:.4rem"></div>
-    <div id="decFieldPick"></div>
-    <input type="hidden" id="decFields">
-
-    <h2><span class="n">2</span>Export and edit in Excel</h2>
-    <div class="actions"><button id="decExportBtn">Export decision sheet</button><button class="ghost" id="decOpenBtn" title="Open the exported sheet in Excel">Open in Excel</button><button class="ghost" id="decOpenDirBtn" title="Show the sheet in its folder">Open folder</button></div>
-    <p class="hint">In Excel set <code>carry_state</code> per row — <b>carry</b> or <b>skip</b> (also <i>derivatives-only</i> / <i>carry+derivatives</i> when a row gets packs or kits). Optional: <code>hold_reason</code>, <code>fulfillment</code>, <code>initial_qty</code>, a hand-set <code>price</code> (beats every rule), <code>new_pack_qty</code> (<code>5</code> or <code>5;10</code>) to add packs. <code>mpn</code> is the key — never change it. Save as CSV, same name.</p>
-    <div id="decExportOut"></div>
-
-    <h2><span class="n">3</span>Bring the decisions back</h2>
-    <div class="row"><label>Edited sheet <input type="text" id="decPath" class="wide" placeholder="filled in by Export"></label></div>
-    <div class="row"><label>Who <input type="text" id="decWho" placeholder="Tony"></label><label>Why <input type="text" id="decWhy" class="wide" placeholder="range review 2026-11"></label></div>
-    <div class="actions" style="margin-top:.5rem"><button class="ghost" id="decPreviewBtn">Preview decisions</button><button id="decApplyBtn">Apply decisions</button><span class="hint">Preview lists every change and every bad cell by row and refuses the sheet while an error stands. Apply writes <code>decisions/decisions.csv</code> (and <code>derivatives.csv</code> for new packs).</span></div>
-    <div id="decOut"></div>
-
-    <h2><span class="n">4</span>Build again</h2>
-    <div class="actions"><button class="ghost" id="decGoBuild">Go to 3 Build</button><span class="hint">The catalog below (one row per CT SKU, with prices) comes from the build.</span></div>
+  <div id="dtab-dec">
+    <ol class="steps" id="decSteps"></ol>
+    <div class="dec-grid">
+      <div class="card">
+        <div class="sheetline" id="decSheet"></div>
+        <div class="actions"><button class="ghost" id="decExportBtn">Export decision sheet</button><button class="ghost" id="decOpenBtn" title="Open the sheet in Excel">Open in Excel</button><button class="ghost" id="decOpenDirBtn" title="Show the sheet in its folder">Open folder</button></div>
+        <div id="decSignSlot"><div class="row sign" id="sign"><label>Who <input type="text" id="decWho" placeholder="Tony"></label><label>Why <input type="text" id="decWhy" class="wide" placeholder="range review 2026-11"></label></div></div>
+        <div class="actions"><button class="ghost" id="decPreviewBtn">Preview decisions</button><button class="ghost" id="decApplyBtn">Apply decisions</button><button class="ghost" id="decGoBuild">Build again →</button></div>
+        <div id="decOut"></div>
+        <details class="more" id="decCols"><summary>Extra reference columns on the sheet: <b id="decColsN">0 chosen</b></summary>
+          <div class="hint" id="decFixed" style="margin:.4rem 0"></div>
+          <input type="text" id="decColSearch" class="picksearch" placeholder="Find a column…">
+          <div id="decFieldPick"></div>
+          <input type="hidden" id="decFields">
+        </details>
+        <details class="more"><summary>Use a different sheet file</summary><div class="row" style="margin-top:.4rem"><label>Sheet path <input type="text" id="decPath" class="wide" placeholder="filled in by Export"></label></div></details>
+      </div>
+      <aside class="card summary" id="decSummary"></aside>
+    </div>
+    <div class="card">
+      <div class="tabs" style="margin-top:0"><button class="on" data-ptab="sheet">Sheet preview</button><button data-ptab="cat">Catalog from the last build</button><span class="hint" id="decPrevMeta"></span></div>
+      <div id="ptab-sheet">
+        <div class="hint" style="margin:0 0 .4rem"><span class="sw you"></span> you fill in &nbsp; <span class="sw key"></span> key &nbsp; <span class="sw ref"></span> reference</div>
+        <div id="decPrev" class="grid prev"><span class="hint">Open a brand.</span></div>
+      </div>
+      <div id="ptab-cat" hidden>
+        <div class="actions" style="margin-bottom:.4rem"><button class="ghost small" id="catBtn">Refresh</button><span class="hint">One row per CT SKU, with prices — what the store will get.</span></div>
+        <div id="catOut"><span class="hint">Build first.</span></div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="actions"><b>Catalog — one row per CT SKU (from the last build)</b><button class="ghost small" id="catBtn">Refresh</button></div>
-    <div id="catOut"><span class="hint">Build first, then refresh.</span></div>
+  <div id="dtab-fix" hidden>
+    <div class="card">
+      <p class="lead" style="margin-top:0">Hand corrections to data values — a wrong weight, a better title. They are saved as overrides you can undo; the next Build uses them.</p>
+      <div class="sheetline" id="csvSheet"></div>
+      <div class="row"><label>Fields to put on the sheet (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="title,weight,msrp_price"></label></div>
+      <div class="actions" style="margin-top:.5rem"><button class="ghost" id="csvExportBtn">Export field-edit sheet</button><button class="ghost" id="csvOpenBtn">Open in Excel</button><button class="ghost" id="csvOpenDirBtn">Open folder</button></div>
+      <div id="csvSignSlot"></div>
+      <div class="actions"><button class="ghost" id="csvPreviewBtn">Preview field edits</button><button id="csvApplyBtn">Apply as overrides</button></div>
+      <div id="csvOut"></div>
+      <details class="more"><summary>Use a different sheet file</summary><div class="row" style="margin-top:.4rem"><label>Sheet path <input type="text" id="csvPath" class="wide"></label></div></details>
+    </div>
   </div>
-
-  <div class="card">
-    <b style="font-size:1rem">B. Field-edit sheet — hand corrections to data values</b> <span class="hint">(a wrong weight, a better title — one column per field; not the decision sheet)</span>
-    <p class="hint">Export the fields you want to work on → change values in Excel, save as CSV → Preview shows every change before anything is written → Apply lands them as reversible overrides; the next Build carries them.</p>
-    <div class="row"><label>Fields (comma-separated; blank = all) <input type="text" id="csvFields" class="wide" placeholder="title,weight,msrp_price"></label><button id="csvExportBtn">Export field-edit sheet</button></div>
-    <div id="csvExportOut"></div>
-    <div class="row" style="margin-top:.8rem"><label>Edited CSV path <input type="text" id="csvPath" class="wide"></label><button class="ghost" id="csvPreviewBtn">Preview field edits</button><button id="csvApplyBtn">Apply as overrides</button></div>
-    <div class="row"><label>Who <input type="text" id="csvWho" placeholder="Tony"></label><label>Why <input type="text" id="csvWhy" class="wide" placeholder="price review 2026-11"></label></div>
-    <div id="csvOut"></div>
-  </div>
-
-  <div class="card planned-card"><b>Packs and kits.</b> A pack is added from the sheet (<code>new_pack_qty</code> on the parent's row) or in <code>brands/&lt;brand&gt;/derivatives.csv</code>: <code>pack,MSF,5,…</code> makes <code>59.MSF.P5</code> (5 × each: cost, list and weight multiplied; dimensions never computed); <code>kit,,,MS-KIT5,MSEF:1;MSF:2;MSM:1;MSL:1,"Spatula Set, 5 pc",…</code> makes <code>59.MS-KIT5</code> (sums of the components). The parent's carry_state must allow derivatives. Pricing rules (markup on cost, discount off list, fixed, list as-is, with rounding and a margin floor) live in <code>pricing.yaml</code>. A form for these comes next.</div>
-</main>
-<aside>
-  <div class="actions" style="justify-content:space-between"><b>Sheet preview</b><span class="hint" id="decPrevMeta">pick a brand</span></div>
-  <div class="hint" style="margin:.3rem 0 .5rem"><span class="sw you"></span> you fill in &nbsp; <span class="sw key"></span> key &nbsp; <span class="sw ref"></span> reference</div>
-  <div id="decPrevCounts" class="hint"></div>
-  <div id="decPrev" class="grid prev" style="max-height:calc(100vh - 230px)"><span class="hint">Choose columns on the left — the preview updates as you tick.</span></div>
-</aside>
-</div>
+</section>
 
 <section class="stage" id="stage-derive" hidden>
   <div class="card planned-card"><b>M2 — Derive &amp; review.</b> Facets (the filter values), the packed <code>filter_metadata</code> and <code>spec_display</code> strings with the 250-character halt, families, SEO titles and descriptions, cleaned HTML — computed from the catalog rows and shown here per product, with every value outside the frozen vocabulary flagged by name.</div>
@@ -466,7 +506,7 @@ $("#loadBtn").onclick = async () => {
   show(`Opened brands/${esc(slug)}. Files declared with blocks are shown but edited in sources.yaml directly.`,"ok");
 };
 // ---- stages
-document.querySelectorAll(".rail button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".rail button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("[id^=stage-]").forEach(x=>x.hidden=true); $("#stage-"+b.dataset.stage).hidden=false; window.scrollTo(0,0); if(b.dataset.stage==="status") runStatus(); if(b.dataset.stage==="build") listBuilds(); if(b.dataset.stage==="decide") loadFieldPicker(); });
+document.querySelectorAll(".rail button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".rail button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("[id^=stage-]").forEach(x=>x.hidden=true); $("#stage-"+b.dataset.stage).hidden=false; window.scrollTo(0,0); if(b.dataset.stage==="status") runStatus(); if(b.dataset.stage==="build") listBuilds(); if(b.dataset.stage==="decide") loadDecide(); });
 function slug(){ return state.brand.slug || $("#loadSel").value; }
 function out(id, html, cls){ $("#"+id).innerHTML = `<div class="status ${cls||''}">${html}</div>`; }
 async function runStatus(){
@@ -485,7 +525,7 @@ function buildReport(r){
   return `<div class="status ok">${r.written?'Built':'Dry run'} ${esc(r.build_id)} — ${r.rows} products, ${(r.overrides||[]).length} override(s) applied${dec}<br>${asr}<br>fallback-supplied values: ${r.alias_notes}<details><summary>coverage per field</summary><div class="kv">${cov}</div></details>`+(r.notes.length?`<details><summary>${r.notes.length} note(s)</summary><pre>${esc(r.notes.join("\n"))}</pre></details>`:"")+`</div>`;
 }
 $("#dryBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Dry run…","warn"); $("#buildOut").innerHTML = buildReport(await api("/api/build",{slug:slug()})); };
-$("#realBuildBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Building…","warn"); $("#buildOut").innerHTML = buildReport(await api("/api/build",{slug:slug(),write:true})); listBuilds(); };
+$("#realBuildBtn").onclick = async()=>{ if(!slug()) return out("buildOut","Open a brand first.","warn"); out("buildOut","Building…","warn"); const r=await api("/api/build",{slug:slug(),write:true}); $("#buildOut").innerHTML = buildReport(r); listBuilds(); if(r.ok){ if(flow.applied) flow.built=true; drawSteps(); } };
 async function listBuilds(){
   if(!slug()) return; const r = await api("/api/builds",{slug:slug()});
   $("#buildsOut").innerHTML = r.builds.length ? `<table><tr><th>version</th><th>created</th><th>products</th><th>catalog rows (SKUs)</th></tr>${r.builds.map(b=>`<tr><td><code>${b.build_id}</code></td><td>${esc(b.created)}</td><td>${b.rows}</td><td>${b.catalog_rows??''}</td></tr>`).join("")}</table>` : `<span class="hint">No builds yet.</span>`;
@@ -501,7 +541,35 @@ $("#diffBtn").onclick = async()=>{
   $("#diffOut").innerHTML = `<p class="hint"><b>Products</b> = one row per vendor part number (what the files say). <b>Catalog</b> = one row per CT SKU (what the store will get: decisions, packs, kits, prices). A decision change shows only in the catalog diff.</p>` + section(r,"Products","product") + section(r.catalog,"Catalog","CT SKU");
 };
 const DEC_EDIT=new Set(["carry_state","hold_reason","fulfillment","initial_qty","price","new_pack_qty","who","when","why"]);
-let decPrevTimer=null;
+// ---- Decide stage (reworked 2026-11-18): one status strip, one action row, results under the buttons,
+// column picker folded away, field edits on their own tab, full-width preview, summary on the right.
+let decPrevTimer=null, sumDec=null, sumCat=null;
+const flow={sheet:false,opened:false,previewed:false,previewOk:false,applied:false,built:false};
+const STEPS=[["sheet","Sheet","decExportBtn"],["edit","Edit in Excel","decOpenBtn"],["preview","Preview","decPreviewBtn"],["apply","Apply","decApplyBtn"],["build","Build again","decGoBuild"]];
+const base = p => String(p||"").split(/[\\/]/).pop();
+function stepDone(k){ return k==="sheet"?flow.sheet : k==="edit"?(flow.opened||flow.previewed) : k==="preview"?flow.previewOk : k==="apply"?flow.applied : flow.built; }
+function drawSteps(){
+  const sub={sheet:flow.sheet?"ready":"export one",edit:"save as CSV",preview:(flow.previewed&&!flow.previewOk)?"fix the errors":"check the changes",apply:"save decisions",build:"update the catalog"};
+  let next=null;
+  $("#decSteps").innerHTML=STEPS.map(([k,t],i)=>{ const d=stepDone(k); let c=d?"done":""; if(!d&&!next){ next=k; c="next"; } return `<li class="${c}"><i>${d?"✓":i+1}</i><span>${t}<small>${sub[k]}</small></span></li>`; }).join("");
+  for (const [k,,id] of STEPS) $("#"+id).classList.toggle("ghost", k!==next);
+  $("#decOpenBtn").disabled=$("#decOpenDirBtn").disabled=!$("#decPath").value;
+}
+function resetFlow(hasSheet){ Object.assign(flow,{sheet:!!hasSheet,opened:false,previewed:false,previewOk:false,applied:false,built:false}); drawSteps(); }
+function sheetLine(el, path, when, none){
+  $(el).innerHTML = path ? `<span>Your sheet</span><span class="fn" title="${esc(path)}">${esc(base(path))}</span><span class="when">${esc(when||"")}</span>` : `<span class="hint">${none}</span>`;
+}
+function drawSummary(){
+  let h="";
+  if (sumDec){ const c=sumDec.counts||{}; const und=c.undecided||0;
+    h+=`<h3>On the decision sheet</h3><div class="big">${sumDec.rows}</div><div class="hint" style="margin:0 0 .5rem">rows — every part number, plus packs and kits</div><div class="kv">`
+      + Object.entries(c).filter(([k])=>k!=="undecided").map(([k,v])=>`<span>${esc(k)}</span><b>${v}</b>`).join("")
+      + `<span>undecided</span><b class="${und?'st-missing':'st-unchanged'}">${und}</b><span>unpriced</span><b class="${sumDec.unpriced?'st-changed':''}">${sumDec.unpriced||0}</b></div>`; }
+  if (sumCat){ h+=`<h3 style="margin-top:1rem">Last build</h3><div class="kv"><span title="what the store gets — skipped rows are left out">catalog rows</span><b>${sumCat.total}</b><span>singles</span><b>${sumCat.kinds.original}</b><span>packs</span><b>${sumCat.kinds.pack}</b><span>kits</span><b>${sumCat.kinds.kit}</b><span>held</span><b>${sumCat.held}</b><span>unpriced</span><b>${sumCat.unpriced}</b><span>version</span><b style="font-size:.72rem">${esc(sumCat.build_id)}</b></div>`; }
+  else if (sumDec) h+=`<h3 style="margin-top:1rem">Last build</h3><p class="hint">No build yet.</p>`;
+  $("#decSummary").innerHTML = h || `<span class="hint">Open a brand (top bar).</span>`;
+}
+async function loadDecide(){ drawSteps(); loadFieldPicker(); loadCatalog(); }
 async function loadFieldPicker(){
   const r=await api("/api/fields",{slug:slug()}); const box=$("#decFieldPick"); if(r.error){ box.innerHTML=`<span class="hint">${esc(r.error)}</span>`; return; }
   let saved=[]; try{ saved=JSON.parse(localStorage.getItem("decFields:"+slug())||"[]"); }catch(e){}
@@ -509,10 +577,12 @@ async function loadFieldPicker(){
   $("#decFixed").innerHTML=`Always on the sheet: ${["mpn","sku","kind",...DEC_EDIT,"unpriced","price now","basis","cost","list","margin%"].map(c=>`<span class="chip">${esc(c)}</span>`).join("")}`
     + (fixed.length?`<br>From your fields: ${fixed.map(f=>`<span class="chip" title="pricing.yaml binds it as ${esc(f.bound_as)}">${esc(f.name)} → ${esc(f.bound_as)}</span>`).join("")}`:"");
   const bySrc={}; free.forEach(f=>{ (bySrc[f.source]=bySrc[f.source]||[]).push(f); });
-  box.innerHTML=`<div class="pick">`+Object.entries(bySrc).map(([src,fs])=>`<div class="src">${esc(src)} · ${esc(r.files[src]||"")}</div><div class="opts">${fs.map(f=>`<label class="inline"><input type="checkbox" data-f="${esc(f.name)}" ${saved.includes(f.name)?'checked':''}> ${esc(f.name)}</label>`).join("")}</div>`).join("")+`</div>`;
-  const sync=()=>{ const on=[...box.querySelectorAll("input[data-f]:checked")].map(i=>i.dataset.f); $("#decFields").value=on.join(","); try{ localStorage.setItem("decFields:"+slug(),JSON.stringify(on)); }catch(e){} clearTimeout(decPrevTimer); decPrevTimer=setTimeout(decPreview,350); };
-  box.querySelectorAll("input[data-f]").forEach(i=>i.onchange=sync); sync();
+  box.innerHTML=`<div class="pick">`+Object.entries(bySrc).map(([src,fs])=>`<div class="grp"><div class="src">${esc(src)} · ${esc(r.files[src]||"")}</div><div class="opts">${fs.map(f=>`<label class="inline"><input type="checkbox" data-f="${esc(f.name)}" ${saved.includes(f.name)?'checked':''}> ${esc(f.name)}</label>`).join("")}</div></div>`).join("")+`</div>`;
+  const sync=()=>{ const on=[...box.querySelectorAll("input[data-f]:checked")].map(i=>i.dataset.f); $("#decFields").value=on.join(","); $("#decColsN").textContent=`${on.length} chosen`; try{ localStorage.setItem("decFields:"+slug(),JSON.stringify(on)); }catch(e){} clearTimeout(decPrevTimer); decPrevTimer=setTimeout(decPreview,350); };
+  box.querySelectorAll("input[data-f]").forEach(i=>i.onchange=sync); $("#decColSearch").value=""; sync();
 }
+$("#decColSearch").oninput = e => { const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll("#decFieldPick .grp").forEach(g=>{ let any=false; g.querySelectorAll("label").forEach(l=>{ const hit=!q||l.textContent.toLowerCase().includes(q); l.hidden=!hit; any=any||hit; }); g.hidden=!any; }); };
 async function decPreview(){
   $("#decPrevMeta").textContent="updating…";
   const r=await api("/api/decision_preview",{slug:slug(),fields:$("#decFields").value});
@@ -520,38 +590,68 @@ async function decPreview(){
   renderSheetPreview(r);
 }
 function renderSheetPreview(r){
-  $("#decPrevMeta").textContent=`${r.rows} rows × ${r.header.length} columns`;
-  const cnt=Object.entries(r.counts).map(([k,v])=>`${v} ${k}`).join(" · ");
-  $("#decPrevCounts").innerHTML=`Carry states: ${esc(cnt)}${r.unpriced?` · <b>${r.unpriced} unpriced</b>`:""}${r.written?` · written to <code>${esc(r.path)}</code>`:""}`;
+  sumDec=r; drawSummary();
+  $("#decPrevMeta").textContent=`first ${r.preview.length} of ${r.rows} rows · ${r.header.length} columns`;
   const cls=h=>DEC_EDIT.has(h)?"you":(h==="mpn"?"key":"");
   const th=r.header.map(h=>`<th class="${cls(h)}" title="${DEC_EDIT.has(h)?"you fill this in":(h==="mpn"?"the key — never change":"reference — ignored on import")}">${esc(h.replace(/^— /,""))}</th>`).join("");
   const tr=r.preview.map(row=>`<tr>${row.map((c,i)=>`<td class="${cls(r.header[i])}" title="${esc(c)}">${esc(String(c))}</td>`).join("")}</tr>`).join("");
   $("#decPrev").innerHTML=`<table><tr>${th}</tr>${tr}</table>`;
 }
-$("#decExportBtn").onclick = async()=>{ out("decExportOut","Writing the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows${r.unpriced?`, ${r.unpriced} unpriced`:""}. Click <b>Open in Excel</b>.${r.kept_previous?` Your previous sheet was kept as <code>${esc(r.kept_previous)}</code>.`:""}`,"ok"); renderSheetPreview(r); };
+function decReport(r){
+  const c=r.counts; const rows=[...r.changes].sort((x,y)=>(y.error?1:0)-(x.error?1:0));
+  let head;
+  if (r.written) head=`Saved ${c.changes} change(s) to <code title="${esc(r.written)}">${esc(base(r.written))}</code>${r.written_derivatives?` and <code title="${esc(r.written_derivatives)}">${esc(base(r.written_derivatives))}</code>`:""}. Next: <b>Build again</b>.`;
+  else head=`${c.changes} change(s)${c.new_packs?` · ${c.new_packs} new pack(s)`:""}${c.unknown?` · ${c.unknown} unknown part number(s)`:""} · <b>${c.errors} error(s)</b>`
+    + (r.refused?`<br><b>Not applied:</b> ${esc(r.refused)}`:(c.errors?`<br>Fix the rows marked in red in Excel, save, and Preview again.`:(c.changes?` — looks good; <b>Apply decisions</b> saves them.`:"")));
+  let h=`<div class="status ${c.errors||r.refused?'bad':'ok'}">${head}</div>`;
+  if (rows.length) h+=`<div class="grid"><table><tr><th>part number</th><th>column</th><th>before</th><th>after</th><th>problem</th></tr>${rows.map(x=>`<tr class="${x.error?'err':''}"><td>${esc(x.mpn)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.error||'')}</td></tr>`).join("")}</table></div>`;
+  if (r.unknown&&r.unknown.length) h+=`<p class="status bad">Not in the product list (ignored): ${r.unknown.map(esc).join(", ")}</p>`;
+  return `<div class="res">${h}</div>`;
+}
+$("#decExportBtn").onclick = async()=>{ out("decOut","Writing the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decOut",esc(r.error),"bad");
+  $("#decPath").value=r.path; sheetLine("#decSheet",r.path,"saved just now"); resetFlow(true);
+  out("decOut",`Wrote ${r.rows} rows${r.unpriced?` (${r.unpriced} unpriced)`:""}. Next: <b>Open in Excel</b>.${r.kept_previous?` Your previous sheet was kept in <code title="${esc(r.kept_previous)}">edits\\previous</code>.`:""}`,"ok"); renderSheetPreview(r); };
 $("#decGoBuild").onclick = ()=>document.querySelector(".rail button[data-stage='build']").click();
-$("#decOpenBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened <code>${esc(r.opened)}</code> in Excel. Edit, save as CSV (same name), then Preview decisions.`,"ok"); };
-$("#decOpenDirBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value,folder:true}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened folder <code>${esc(r.opened)}</code>.`,"ok"); };
-$("#decPreviewBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
-$("#decApplyBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
-$("#catBtn").onclick = async()=>{ const r=await api("/api/catalog",{slug:slug()}); if(r.error) return out("catOut",esc(r.error),"bad");
-  $("#catOut").innerHTML = `<div class="status ok">${r.total} rows from build ${esc(r.build_id)} — ${r.kinds.original} single · ${r.kinds.pack} packs · ${r.kinds.kit} kits · ${r.held} held · ${r.unpriced} unpriced</div><div class="grid" style="max-height:420px"><table><tr><th>CT SKU</th><th>kind</th><th>name</th><th>price</th><th>margin %</th><th>price basis</th><th>fulfillment</th><th>qty</th><th>held</th></tr>${r.rows.map(x=>`<tr><td><code>${esc(x.sku)}</code></td><td>${esc(x.kind)}</td><td title="${esc(x.name)}">${esc(x.name)}</td><td>${esc(x.price)}</td><td>${esc(x.margin)}</td><td>${esc(x.basis)}</td><td>${esc(x.fulfillment)}</td><td>${esc(x.qty)}</td><td class="${x.held?'st-changed':''}">${esc(x.held)}</td></tr>`).join("")}</table></div>`+(r.total>500?`<p class="hint">showing 500 of ${r.total}</p>`:""); };
-$("#csvExportBtn").onclick = async()=>{ const r=await api("/api/export_csv",{slug:slug(),fields:$("#csvFields").value}); if(r.error) return out("csvExportOut",esc(r.error),"bad"); $("#csvPath").value=r.path; out("csvExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products × ${r.fields.length} fields, from build ${esc(r.build_id)}. Open it in Excel, edit, save as CSV.${r.kept_previous?` Your previous sheet was kept as <code>${esc(r.kept_previous)}</code>.`:""}`,"ok"); };
-function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) across ${Object.keys(c.by_field).length} field(s) · ${c.damage} suspected damage · ${c.unknown_skus} unknown product(s) · ${c.unknown_columns} unknown column(s)`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Written: <code>${esc(r.written)}</code> — now run <b>Build</b> to apply.`:'')+`</div>`;
-  if (r.changes.length) h+=`<table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${r.changes.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td></tr>`).join("")}</table>`;
-  if (r.damage.length) h+=`<p class="status bad">Suspected spreadsheet damage (not applied):</p><table><tr><th>product</th><th>field</th><th>before</th><th>after</th><th>why</th></tr>${r.damage.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.suspected.join("; "))}</td></tr>`).join("")}</table>`;
+$("#decOpenBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value}); if(r.error) return out("decOut",esc(r.error),"bad");
+  Object.assign(flow,{opened:true,previewed:false,previewOk:false,applied:false,built:false}); drawSteps();
+  out("decOut",`Opened in Excel. Edit, save as CSV (same name), then <b>Preview decisions</b>.`,"ok"); };
+$("#decOpenDirBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value,folder:true}); if(r.error) return out("decOut",esc(r.error),"bad"); out("decOut",`Opened the folder.`,"ok"); };
+$("#decPreviewBtn").onclick = async()=>{ out("decOut","Checking the sheet…","warn"); const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value}); if(r.error) return out("decOut",esc(r.error),"bad");
+  flow.previewed=true; flow.previewOk=!r.counts.errors; drawSteps(); $("#decOut").innerHTML=decReport(r); };
+$("#decApplyBtn").onclick = async()=>{ out("decOut","Applying…","warn"); const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("decOut",esc(r.error),"bad");
+  if (r.written){ Object.assign(flow,{previewed:true,previewOk:true,applied:true,built:false}); decPreview(); } drawSteps(); $("#decOut").innerHTML=decReport(r); };
+async function loadCatalog(){ const r=await api("/api/catalog",{slug:slug()});
+  if(r.error){ sumCat=null; drawSummary(); $("#catOut").innerHTML=`<span class="hint">${r.error==="no build yet"?"No build yet — build first.":esc(r.error)}</span>`; return; }
+  sumCat=r; drawSummary();
+  $("#catOut").innerHTML = `<div class="grid" style="max-height:60vh"><table><tr><th>CT SKU</th><th>kind</th><th>name</th><th>price</th><th>margin %</th><th>price basis</th><th>fulfillment</th><th>qty</th><th>held</th></tr>${r.rows.map(x=>`<tr><td><code>${esc(x.sku)}</code></td><td>${esc(x.kind)}</td><td title="${esc(x.name)}">${esc(x.name)}</td><td>${esc(x.price)}</td><td>${esc(x.margin)}</td><td>${esc(x.basis)}</td><td>${esc(x.fulfillment)}</td><td>${esc(x.qty)}</td><td class="${x.held?'st-changed':''}">${esc(x.held)}</td></tr>`).join("")}</table></div>`+(r.total>500?`<p class="hint">showing 500 of ${r.total}</p>`:""); }
+$("#catBtn").onclick = loadCatalog;
+document.querySelectorAll("[data-dtab]").forEach(b=>b.onclick=()=>{ document.querySelectorAll("[data-dtab]").forEach(x=>x.classList.toggle("on",x===b)); const t=b.dataset.dtab; $("#dtab-dec").hidden=t!=="dec"; $("#dtab-fix").hidden=t!=="fix"; $(t==="dec"?"#decSignSlot":"#csvSignSlot").appendChild($("#sign")); });
+document.querySelectorAll("[data-ptab]").forEach(b=>b.onclick=()=>{ document.querySelectorAll("[data-ptab]").forEach(x=>x.classList.toggle("on",x===b)); const t=b.dataset.ptab; $("#ptab-sheet").hidden=t!=="sheet"; $("#ptab-cat").hidden=t!=="cat"; $("#decPrevMeta").hidden=t!=="sheet"; });
+try{ $("#decWho").value=localStorage.getItem("pim:who")||""; }catch(e){}
+$("#decWho").oninput = e => { try{ localStorage.setItem("pim:who", e.target.value); }catch(_){} };
+// ---- field-edit sheet (tab 2)
+$("#csvExportBtn").onclick = async()=>{ out("csvOut","Writing the sheet…","warn"); const r=await api("/api/export_csv",{slug:slug(),fields:$("#csvFields").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvPath").value=r.path; sheetLine("#csvSheet",r.path,"saved just now"); $("#csvOpenBtn").disabled=$("#csvOpenDirBtn").disabled=false;
+  out("csvOut",`Wrote ${r.rows} products × ${r.fields.length} fields from the last build. Next: <b>Open in Excel</b>, edit, save as CSV.${r.kept_previous?` Your previous sheet was kept in <code title="${esc(r.kept_previous)}">edits\\previous</code>.`:""}`,"ok"); };
+$("#csvOpenBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#csvPath").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); out("csvOut","Opened in Excel. Edit, save as CSV (same name), then <b>Preview field edits</b>.","ok"); };
+$("#csvOpenDirBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#csvPath").value,folder:true}); if(r.error) return out("csvOut",esc(r.error),"bad"); out("csvOut","Opened the folder.","ok"); };
+function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) across ${Object.keys(c.by_field).length} field(s) · ${c.damage} suspected damage · ${c.unknown_skus} unknown product(s) · ${c.unknown_columns} unknown column(s)`+(r.refused?`<br><b>Not applied:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Saved as overrides — now <b>Build</b> to use them.`:'')+`</div>`;
+  if (r.changes.length) h+=`<div class="grid"><table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${r.changes.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td></tr>`).join("")}</table></div>`;
+  if (r.damage.length) h+=`<p class="status bad">Suspected spreadsheet damage (not applied):</p><div class="grid"><table><tr><th>product</th><th>field</th><th>before</th><th>after</th><th>why</th></tr>${r.damage.map(x=>`<tr class="err"><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.suspected.join("; "))}</td></tr>`).join("")}</table></div>`;
   if (r.unknown_columns.length) h+=`<p class="status bad">Unknown columns: ${r.unknown_columns.map(esc).join(", ")} — declare the field first.</p>`;
-  return h; }
+  return `<div class="res">${h}</div>`; }
 $("#csvPreviewBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
-$("#csvApplyBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value,apply:true,who:$("#csvWho").value,why:$("#csvWhy").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
+$("#csvApplyBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
 
 // ---- sheets already on disk: opening a brand reopens what you were working on (2026-11-18)
 function applySheets(s){
   s = s || {};
-  if (s.decisions){ $("#decPath").value=s.decisions.path; out("decExportOut",`Found your decision sheet from ${esc(s.decisions.modified)}: <code>${esc(s.decisions.path)}</code>. <b>Open in Excel</b> picks up where you left off. <b>Export</b> makes a fresh one and keeps this one in <code>edits\\previous</code>.`,"ok"); }
-  else { $("#decPath").value=""; $("#decExportOut").innerHTML=""; }
-  if (s.fields){ $("#csvPath").value=s.fields.path; out("csvExportOut",`Found your field sheet from ${esc(s.fields.modified)}: <code>${esc(s.fields.path)}</code>.`,"ok"); }
-  else { $("#csvPath").value=""; $("#csvExportOut").innerHTML=""; }
+  $("#decPath").value = s.decisions ? s.decisions.path : "";
+  sheetLine("#decSheet", s.decisions&&s.decisions.path, s.decisions&&("saved "+s.decisions.modified), "No decision sheet yet — <b>Export decision sheet</b> makes one.");
+  $("#csvPath").value = s.fields ? s.fields.path : "";
+  sheetLine("#csvSheet", s.fields&&s.fields.path, s.fields&&("saved "+s.fields.modified), "No field-edit sheet yet — choose fields and export one.");
+  $("#csvOpenBtn").disabled=$("#csvOpenDirBtn").disabled=!s.fields;
+  $("#decOut").innerHTML=""; $("#csvOut").innerHTML=""; sumDec=null; sumCat=null; drawSummary();
+  resetFlow(!!s.decisions);
 }
 // ---- the window restarts itself when its code changes (PIM.bat relaunches on exit code 75)
 let restartTimer=null;
