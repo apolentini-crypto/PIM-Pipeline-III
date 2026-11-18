@@ -110,14 +110,18 @@ sheet, window forms for derivatives and pricing rules, then M3–M5 Publish once
 
 ## Git / GitHub
 
-Commits are made on TP's PC. Last: `78a582b` "M2a walk: …". **Push is blocked** until TP puts a new
-GitHub token (Contents read/write on PIM-Pipeline-III) in
-`C:\Users\apole\Castletronics-local\Dev\repos\castletronics_hub\.ct-gh-token` (the current one is
-scoped to the hub repo → 403). Never print a token. Push command for TP:
-```
-cd "C:\Users\apole\Castletronics-local\Dev\repos\PIM-Pipeline-III"
-git push origin main
-```
+Claude makes every commit and every push, through the GitHub API, always. Never hand TP a
+command to run. Repo: https://github.com/apolentini-crypto/PIM-Pipeline-III (**public**).
+
+- **Push token:** `.ct-gh-token` in this repo's root on TP's PC. Git-ignored, never committed,
+  never printed. Fine-grained, Contents read/write on this repo only.
+- **Push:** `git push` with the token passed as an HTTP header, then confirm through the
+  GitHub REST API that GitHub's `main` equals local HEAD. First verified push: 2026-11-18,
+  `14545b3..b54fd00`.
+- **`castletronics_hub` is a different project (CT Hub).** This is PIM development. Never use the
+  hub folder for PIM work or for the PIM token. (The October note that put the token there was wrong.)
+- Repo is public: never commit `.claude/root-CLAUDE.md`, vendor files, builds (`var/`), or
+  pricing figures.
 
 ## Working-with-the-machine notes (for Claude)
 
