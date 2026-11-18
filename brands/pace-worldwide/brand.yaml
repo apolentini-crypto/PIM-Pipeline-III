@@ -2,7 +2,7 @@
 slug: pace-worldwide
 display_name: Pace Worldwide
 bc_brand_name: Pace Worldwide
-brand_id: 61
+brand_id: 38
 mpn_normalisation:
   upper: true
   strip_whitespace: true
