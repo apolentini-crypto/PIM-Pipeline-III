@@ -50,3 +50,7 @@ desktop.ini
 index.lock
 *.stale
 _to_delete/
+
+# GitHub token used for pushes. Never commit.
+.ct-gh-token
+.ct-gh-token.txt
