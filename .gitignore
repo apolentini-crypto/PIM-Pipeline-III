@@ -54,3 +54,6 @@ _to_delete/
 # GitHub token used for pushes. Never commit.
 .ct-gh-token
 .ct-gh-token.txt
+
+# Tony's global rules: on his PC only, never in this public repo (imported by CLAUDE.md)
+.claude/root-CLAUDE.md
