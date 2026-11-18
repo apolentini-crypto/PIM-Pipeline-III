@@ -120,3 +120,36 @@ def test_pack_fields_lists_kept_columns_and_bindings(tmp_path, monkeypatch):
     for role, fname in py.items():
         assert names[fname]["bound_as"] == role
     assert "no pack" in pack_fields("nope")["error"]
+
+
+# ---- 2026-11-18: reopen sheets already on disk; never overwrite an edited sheet; self-restart
+def test_open_brand_finds_sheets_already_on_disk(tmp_path, monkeypatch):
+    monkeypatch.setattr("pim.ui.server.BRANDS", tmp_path / "brands")
+    monkeypatch.setenv("PIM_VAR_DIR", str(tmp_path / "var"))
+    shutil.copytree(FIXTURE_PACK, tmp_path / "brands" / "fixture-brand")
+    assert load_pack("fixture-brand")["sheets"] == {"decisions": None, "fields": None}
+    ed = tmp_path / "var" / "fixture-brand" / "edits"; ed.mkdir(parents=True)
+    (ed / "fixture-brand-decisions.csv").write_text("mpn\n", encoding="utf-8")
+    (ed / "fixture-brand-abc123.csv").write_text("sku\n", encoding="utf-8")
+    s = load_pack("fixture-brand")["sheets"]
+    assert s["decisions"]["path"].endswith("fixture-brand-decisions.csv") and s["decisions"]["modified"]
+    assert s["fields"]["path"].endswith("fixture-brand-abc123.csv")
+
+
+def test_export_keeps_the_previous_sheet(tmp_path):
+    from pathlib import Path
+    from pim.ui.server import _keep_previous
+    p = tmp_path / "x-decisions.csv"
+    assert _keep_previous(p) is None                      # nothing there yet: nothing kept
+    p.write_text("edited in excel\n", encoding="utf-8")
+    p.with_suffix(".types.json").write_text("{}", encoding="utf-8")
+    kept = Path(_keep_previous(p))
+    assert kept.parent.name == "previous" and kept.read_text(encoding="utf-8") == "edited in excel\n"
+    assert list(kept.parent.glob("*.types.json"))       # the field sheet's type file travels with it
+
+
+def test_code_change_is_detected(monkeypatch):
+    import pim.ui.server as s
+    assert not s._code_stamp() > s.CODE_STAMP            # unchanged since import
+    monkeypatch.setattr(s, "CODE_STAMP", 0.0)
+    assert s._code_stamp() > s.CODE_STAMP                # any newer file counts as a change

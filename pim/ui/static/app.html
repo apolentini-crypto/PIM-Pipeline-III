@@ -447,14 +447,14 @@ $("#buildBtn").onclick = async () => {
 // ---- load existing
 async function loadBrands(){ const r=await api("/api/brands");
   if(!r.version){ $("#repo").innerHTML=`<span class="tag bad">The program behind this window is older than the page — close the PIM console and double-click PIM.bat again.</span>`; }
-  else { $("#repo").textContent=`${r.repo} · v${r.version} · window started ${r.started}`; } $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); }
+  else { $("#repo").textContent=`${r.repo} · v${r.version} · window started ${r.started}`; } $("#loadSel").innerHTML=`<option value="">— new brand —</option>`+r.brands.map(b=>`<option>${esc(b)}</option>`).join(""); try{ const l=localStorage.getItem("pim:lastSlug"); if(l && r.brands.includes(l)) $("#loadSel").value=l; }catch(e){} }
 function resetState(){
   Object.assign(state, { brand:{slug:"",display_name:"",bc_brand_name:"",brand_id:"",source_root:"",text_fixes:{}}, sources:[], fields:[], joins:{primary_source:"",key_rule:"trim-only",associations:[]}, expectations:{roster_count:""} });
   files=[]; current=null; inspectCache={};
   for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value="";
   $("#roster_count").value=""; $("#files").innerHTML='<span class="hint">List files to begin.</span>'; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; $("#colsFor").textContent=""; $("#primary_source").innerHTML=""; $("#result").innerHTML="";
   document.querySelector(".rail button[data-stage='setup']").click();
-  renderYaml(); readiness();
+  applySheets({}); renderYaml(); readiness();
 }
 $("#loadBtn").onclick = async () => {
   const slug=$("#loadSel").value;
@@ -462,6 +462,7 @@ $("#loadBtn").onclick = async () => {
   const r=await api("/api/load",{slug}); if(r.error) return show(esc(r.error),"bad");
   Object.assign(state, r); for (const id of ["slug","display_name","bc_brand_name","brand_id","source_root"]) $("#"+id).value=state.brand[id]??""; $("#roster_count").value=state.expectations.roster_count??"";
   current=null; $("#fileCard").hidden=true; $("#cols").innerHTML='<span class="hint">Pick a file above.</span>'; drawFiles(); renderYaml(); readiness();
+  applySheets(r.sheets); try{ localStorage.setItem("pim:lastSlug", slug); }catch(e){}
   show(`Opened brands/${esc(slug)}. Files declared with blocks are shown but edited in sources.yaml directly.`,"ok");
 };
 // ---- stages
@@ -527,7 +528,7 @@ function renderSheetPreview(r){
   const tr=r.preview.map(row=>`<tr>${row.map((c,i)=>`<td class="${cls(r.header[i])}" title="${esc(c)}">${esc(String(c))}</td>`).join("")}</tr>`).join("");
   $("#decPrev").innerHTML=`<table><tr>${th}</tr>${tr}</table>`;
 }
-$("#decExportBtn").onclick = async()=>{ out("decExportOut","Writing the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows${r.unpriced?`, ${r.unpriced} unpriced`:""}. Click <b>Open in Excel</b>.`,"ok"); renderSheetPreview(r); };
+$("#decExportBtn").onclick = async()=>{ out("decExportOut","Writing the sheet…","warn"); const r=await api("/api/decision_sheet",{slug:slug(),fields:$("#decFields").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); $("#decPath").value=r.path; out("decExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} rows${r.unpriced?`, ${r.unpriced} unpriced`:""}. Click <b>Open in Excel</b>.${r.kept_previous?` Your previous sheet was kept as <code>${esc(r.kept_previous)}</code>.`:""}`,"ok"); renderSheetPreview(r); };
 $("#decGoBuild").onclick = ()=>document.querySelector(".rail button[data-stage='build']").click();
 $("#decOpenBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened <code>${esc(r.opened)}</code> in Excel. Edit, save as CSV (same name), then Preview decisions.`,"ok"); };
 $("#decOpenDirBtn").onclick = async()=>{ const r=await api("/api/open",{path:$("#decPath").value,folder:true}); if(r.error) return out("decExportOut",esc(r.error),"bad"); out("decExportOut",`Opened folder <code>${esc(r.opened)}</code>.`,"ok"); };
@@ -535,7 +536,7 @@ $("#decPreviewBtn").onclick = async()=>{ const r=await api("/api/decision_import
 $("#decApplyBtn").onclick = async()=>{ const r=await api("/api/decision_import",{slug:slug(),path:$("#decPath").value,apply:true,who:$("#decWho").value,why:$("#decWhy").value}); if(r.error) return out("decOut",esc(r.error),"bad"); $("#decOut").innerHTML=decReport(r); };
 $("#catBtn").onclick = async()=>{ const r=await api("/api/catalog",{slug:slug()}); if(r.error) return out("catOut",esc(r.error),"bad");
   $("#catOut").innerHTML = `<div class="status ok">${r.total} rows from build ${esc(r.build_id)} — ${r.kinds.original} single · ${r.kinds.pack} packs · ${r.kinds.kit} kits · ${r.held} held · ${r.unpriced} unpriced</div><div class="grid" style="max-height:420px"><table><tr><th>CT SKU</th><th>kind</th><th>name</th><th>price</th><th>margin %</th><th>price basis</th><th>fulfillment</th><th>qty</th><th>held</th></tr>${r.rows.map(x=>`<tr><td><code>${esc(x.sku)}</code></td><td>${esc(x.kind)}</td><td title="${esc(x.name)}">${esc(x.name)}</td><td>${esc(x.price)}</td><td>${esc(x.margin)}</td><td>${esc(x.basis)}</td><td>${esc(x.fulfillment)}</td><td>${esc(x.qty)}</td><td class="${x.held?'st-changed':''}">${esc(x.held)}</td></tr>`).join("")}</table></div>`+(r.total>500?`<p class="hint">showing 500 of ${r.total}</p>`:""); };
-$("#csvExportBtn").onclick = async()=>{ const r=await api("/api/export_csv",{slug:slug(),fields:$("#csvFields").value}); if(r.error) return out("csvExportOut",esc(r.error),"bad"); $("#csvPath").value=r.path; out("csvExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products × ${r.fields.length} fields, from build ${esc(r.build_id)}. Open it in Excel, edit, save as CSV.`,"ok"); };
+$("#csvExportBtn").onclick = async()=>{ const r=await api("/api/export_csv",{slug:slug(),fields:$("#csvFields").value}); if(r.error) return out("csvExportOut",esc(r.error),"bad"); $("#csvPath").value=r.path; out("csvExportOut",`Wrote <code>${esc(r.path)}</code> — ${r.rows} products × ${r.fields.length} fields, from build ${esc(r.build_id)}. Open it in Excel, edit, save as CSV.${r.kept_previous?` Your previous sheet was kept as <code>${esc(r.kept_previous)}</code>.`:""}`,"ok"); };
 function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'bad':r.written?'ok':'warn'}">${c.changes} change(s) across ${Object.keys(c.by_field).length} field(s) · ${c.damage} suspected damage · ${c.unknown_skus} unknown product(s) · ${c.unknown_columns} unknown column(s)`+(r.refused?`<br><b>Refused:</b> ${esc(r.refused)}`:'')+(r.written?`<br>Written: <code>${esc(r.written)}</code> — now run <b>Build</b> to apply.`:'')+`</div>`;
   if (r.changes.length) h+=`<table><tr><th>product</th><th>field</th><th>before</th><th>after</th></tr>${r.changes.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td></tr>`).join("")}</table>`;
   if (r.damage.length) h+=`<p class="status bad">Suspected spreadsheet damage (not applied):</p><table><tr><th>product</th><th>field</th><th>before</th><th>after</th><th>why</th></tr>${r.damage.map(x=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.field)}</td><td>${esc(x.before)}</td><td>${esc(x.after)}</td><td>${esc(x.suspected.join("; "))}</td></tr>`).join("")}</table>`;
@@ -544,7 +545,44 @@ function csvReport(r){ const c=r.counts; let h=`<div class="status ${r.refused?'
 $("#csvPreviewBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
 $("#csvApplyBtn").onclick = async()=>{ const r=await api("/api/import_csv",{slug:slug(),path:$("#csvPath").value,apply:true,who:$("#csvWho").value,why:$("#csvWhy").value}); if(r.error) return out("csvOut",esc(r.error),"bad"); $("#csvOut").innerHTML=csvReport(r); };
 
-loadBrands(); renderYaml(); readiness();
+// ---- sheets already on disk: opening a brand reopens what you were working on (2026-11-18)
+function applySheets(s){
+  s = s || {};
+  if (s.decisions){ $("#decPath").value=s.decisions.path; out("decExportOut",`Found your decision sheet from ${esc(s.decisions.modified)}: <code>${esc(s.decisions.path)}</code>. <b>Open in Excel</b> picks up where you left off. <b>Export</b> makes a fresh one and keeps this one in <code>edits\\previous</code>.`,"ok"); }
+  else { $("#decPath").value=""; $("#decExportOut").innerHTML=""; }
+  if (s.fields){ $("#csvPath").value=s.fields.path; out("csvExportOut",`Found your field sheet from ${esc(s.fields.modified)}: <code>${esc(s.fields.path)}</code>.`,"ok"); }
+  else { $("#csvPath").value=""; $("#csvExportOut").innerHTML=""; }
+}
+// ---- the window restarts itself when its code changes (PIM.bat relaunches on exit code 75)
+let restartTimer=null;
+async function pingCode(){
+  if(restartTimer) return;
+  let r; try{ r=await (await fetch("/api/ping")).json(); }catch(e){ return; }
+  if(r.code_changed) showRestartBanner();
+}
+function showRestartBanner(){
+  let n=10; const b=document.createElement("div"); b.id="restartBanner"; b.className="status warn";
+  b.style.cssText="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:99;max-width:90vw";
+  const draw=()=>{ b.innerHTML=`The window was updated. Restarting in ${n} s to load it — you'll come back to this brand and stage. <button class="ghost small" id="restartCancel">Not now</button>`; $("#restartCancel").onclick=()=>{ clearInterval(restartTimer); restartTimer="cancelled"; b.remove(); }; };
+  document.body.appendChild(b); draw();
+  restartTimer=setInterval(async()=>{ n--; if(n>0){ draw(); return; } clearInterval(restartTimer); b.textContent="Restarting…"; await doRestart(); },1000);
+}
+async function doRestart(){
+  const on=document.querySelector(".rail button.on"); const stage=on?on.dataset.stage:"";
+  try{ sessionStorage.setItem("pim:resume", JSON.stringify({slug:slug(), stage})); }catch(e){}
+  let old=""; try{ old=(await (await fetch("/api/ping")).json()).boot; }catch(e){}
+  try{ await fetch("/api/restart",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"}); }catch(e){}
+  for(let i=0;i<120;i++){ await new Promise(res=>setTimeout(res,500)); try{ const r=await (await fetch("/api/ping")).json(); if(r.boot && r.boot!==old){ location.reload(); return; } }catch(e){} }
+  const b=$("#restartBanner"); if(b) b.textContent="The window did not come back on its own. Double-click PIM.bat to start it.";
+}
+async function resumeIfRestarted(){
+  let s=null; try{ s=JSON.parse(sessionStorage.getItem("pim:resume")||"null"); sessionStorage.removeItem("pim:resume"); }catch(e){}
+  if(!s) return;
+  if(s.slug){ $("#loadSel").value=s.slug; await $("#loadBtn").onclick(); }
+  if(s.stage){ const b=document.querySelector(`.rail button[data-stage='${s.stage}']`); if(b) b.click(); }
+}
+setInterval(pingCode, 4000);
+loadBrands().then(resumeIfRestarted); renderYaml(); readiness();
 </script>
 </body>
 </html>

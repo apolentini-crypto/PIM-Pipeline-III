@@ -23,6 +23,8 @@ from pim.ingest.readers import cell_text
 
 import datetime as _dt
 STARTED = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+BOOT_ID = _dt.datetime.now().isoformat(timespec="microseconds")   # changes on every start
+RESTART = threading.Event()                                        # set by /api/restart; PIM.bat relaunches on exit 75
 REPO = Path(__file__).resolve().parents[2]
 BRANDS = REPO / "brands"
 STATIC = Path(__file__).resolve().parent / "static"
@@ -427,12 +429,56 @@ def load_pack(slug: str) -> dict:
                       "brand_id": b.get("brand_id"), "source_root": s.get("source_root"), "text_fixes": b.get("text_fixes", {})},
             "sources": sources, "fields": fields,
             "joins": {"primary_source": j.get("primary_source"), "key_rule": (j.get("key") or {}).get("rule", "trim-only"), "associations": j.get("associations", [])},
-            "expectations": {"roster_count": e.get("roster_count")}}
+            "expectations": {"roster_count": e.get("roster_count")},
+            "sheets": existing_sheets(slug)}
 
 
 def _var() -> Path:
     import os
     return Path(os.environ.get("PIM_VAR_DIR") or (REPO / "var"))
+
+
+# ----------------------------------------------------------------- sheets already on disk
+def existing_sheets(slug: str) -> dict:
+    """The decision sheet and the newest field-edit sheet already exported for this brand, so
+    opening the brand can reopen them without exporting again (operator 2026-11-18)."""
+    d = _var() / slug / "edits"
+    dec = d / f"{slug}-decisions.csv"
+    def info(p: Path) -> dict:
+        return {"path": str(p), "modified": _dt.datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")}
+    fields = sorted((p for p in d.glob(f"{slug}-*.csv") if p.name != dec.name), key=lambda p: p.stat().st_mtime, reverse=True) if d.is_dir() else []
+    return {"decisions": info(dec) if dec.is_file() else None, "fields": info(fields[0]) if fields else None}
+
+
+def _keep_previous(p: Path) -> str | None:
+    """Before an export overwrites a sheet, copy the existing one to edits/previous/ — it may hold
+    edits made in Excel that were never imported. Returns the copy's path, or None."""
+    if not p.is_file():
+        return None
+    keep = p.parent / "previous"; keep.mkdir(parents=True, exist_ok=True)
+    stamp = _dt.datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y%m%d-%H%M%S")
+    dst = keep / f"{p.stem}.{stamp}{p.suffix}"
+    shutil.copy2(p, dst)
+    side = p.with_suffix(".types.json")
+    if side.is_file():
+        shutil.copy2(side, keep / f"{p.stem}.{stamp}.types.json")
+    return str(dst)
+
+
+# ----------------------------------------------------------------- self-restart when the window's code changes
+def _code_stamp() -> float:
+    """Newest modification time of the window's own code (pim/**/*.py and the page)."""
+    m = 0.0
+    for p in Path(__file__).resolve().parents[1].rglob("*"):
+        if p.suffix in (".py", ".html") and "__pycache__" not in p.parts:
+            try:
+                m = max(m, p.stat().st_mtime)
+            except OSError:
+                pass
+    return m
+
+
+CODE_STAMP = _code_stamp()
 
 
 def source_status(slug: str) -> dict:
@@ -528,8 +574,12 @@ def csv_export(slug: str, fields: list[str], out: str | None) -> dict:
     rows = read_build(con, bid); con.close()
     fields = fields or sorted({f for r in rows.values() for f in r})
     p = Path(out) if out else _var() / slug / "edits" / f"{slug}-{bid}.csv"
+    kept = _keep_previous(p)
     export_csv(rows, fields, p)
-    return {"path": str(p), "rows": len(rows), "fields": fields, "build_id": bid}
+    r = {"path": str(p), "rows": len(rows), "fields": fields, "build_id": bid}
+    if kept:
+        r["kept_previous"] = kept
+    return r
 
 
 def csv_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
@@ -560,10 +610,14 @@ def decision_sheet(slug: str, fields: list[str], write: bool = True) -> dict:
     from pim.build import export_decision_sheet
     from pim.normalize.core import HaltError
     extra = [f.strip() for f in (fields or "").split(",") if f.strip()] if isinstance(fields, str) else list(fields or [])
+    kept = _keep_previous(_var() / slug / "edits" / f"{slug}-decisions.csv") if write else None
     try:
-        return export_decision_sheet(BRANDS / slug, _var(), extra, write=write)
+        r = export_decision_sheet(BRANDS / slug, _var(), extra, write=write)
     except HaltError as e:
         return {"error": str(e)}
+    if kept:
+        r["kept_previous"] = kept
+    return r
 
 
 def decision_import(slug: str, path: str, apply: bool, who: str, why: str) -> dict:
@@ -629,6 +683,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/brands":
             from pim import __version__
             self._json({"brands": sorted(p.name for p in BRANDS.iterdir() if p.is_dir()) if BRANDS.exists() else [], "repo": str(REPO), "version": __version__, "started": STARTED})
+        elif path == "/api/ping":
+            self._json({"boot": BOOT_ID, "started": STARTED, "code_changed": _code_stamp() > CODE_STAMP})
         else:
             self._json({"error": "not found"}, 404)
 
@@ -679,6 +735,14 @@ class Handler(BaseHTTPRequestHandler):
                 # local-only: a newer PIM window asks this one to stop (PIM.bat restart)
                 self._json({"stopping": True})
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
+            elif path == "/api/restart":
+                # the page saw that the window's code changed; stop with exit code 75 so PIM.bat starts the new code
+                if not _code_stamp() > CODE_STAMP:
+                    self._json({"error": "the code has not changed — nothing to restart"})
+                else:
+                    RESTART.set()
+                    self._json({"restarting": True})
+                    threading.Thread(target=self.server.shutdown, daemon=True).start()
             else:
                 self._json({"error": "not found"}, 404)
         except Exception as e:
@@ -699,7 +763,8 @@ def _stop_previous(port: int) -> bool:
     return False
 
 
-def serve(port: int = 8766, open_browser: bool = True) -> None:
+def serve(port: int = 8766, open_browser: bool = True) -> bool:
+    """Run the window. Returns True when it stopped because the page asked for a restart."""
     from pim import __version__
     try:
         srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
@@ -720,3 +785,4 @@ def serve(port: int = 8766, open_browser: bool = True) -> None:
         pass
     finally:
         srv.server_close()
+    return RESTART.is_set()
